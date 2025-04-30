@@ -11,7 +11,11 @@ android {
 
     defaultConfig {
         applicationId = "com.example.testdkdn"
+
         minSdk = 26
+
+        minSdk = 31
+
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -82,6 +86,8 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0") // (Tùy chọn) để log request
     implementation(libs.cloudinary)
     implementation("io.coil-kt:coil-compose:2.0.0")
+
     implementation(libs.androidx.material)
+
 
 }

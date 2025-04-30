@@ -38,7 +38,11 @@ class MainActivity : ComponentActivity() {
             }
 
             if (isLoggedIn) {
+
                 goToTrangchu()
+
+                goToNoteScreen()
+
             } else {
                 LoginRegisterScreen(
                     onRegister = { email, password -> registerUser(email, password) },
@@ -65,7 +69,11 @@ class MainActivity : ComponentActivity() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Toast.makeText(this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show()
+
                     goToTrangchu()
+
+                    goToNoteScreen()
+
                 } else {
                     Toast.makeText(this, "Sai tài khoản hoặc mật khẩu", Toast.LENGTH_SHORT).show()
                 }
@@ -76,11 +84,14 @@ class MainActivity : ComponentActivity() {
         startActivity(Intent(this, NoteActivity::class.java))
         finish()
     }
+
     private fun goToTrangchu() {
         startActivity(Intent(this, TrangchuActivity::class.java))
         finish()
     }
 }
+
+
 
 
 @Composable

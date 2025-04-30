@@ -34,7 +34,11 @@
         </activity>
         <activity android:name=".NoteActivity" />
         <activity android:name=".NoteEditorActivity" />
+<<<<<<< HEAD
         <activity android:name=".TrangchuActivity" />
+=======
+
+>>>>>>> 1582700ab4a063d3db987994dd107c063f7ea727
 
 
     </application>
