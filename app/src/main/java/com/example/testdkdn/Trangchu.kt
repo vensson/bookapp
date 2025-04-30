@@ -1,5 +1,6 @@
 package com.example.testdkdn
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -156,15 +157,22 @@ class TrangchuActivity : ComponentActivity() {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Button(
-                    onClick = { /* TODO */ },
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    onClick = {
+                        val intent = Intent(context, ChitietActivity::class.java).apply {
+                            putExtra("imageName", imageName)
+                            putExtra("title", title)
+                            putExtra("price", price)
+                        }
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0077B6)),
                     shape = RoundedCornerShape(6.dp),
                     contentPadding = PaddingValues(4.dp)
                 ) {
                     Text("Xem", fontSize = 12.sp)
                 }
+
             }
         }
     }
