@@ -1,5 +1,7 @@
 package com.example.testdkdn
 
+import com.google.firebase.firestore.FirebaseFirestore
+
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -38,7 +40,7 @@ class MainActivity : ComponentActivity() {
             }
 
             if (isLoggedIn) {
-                goToTrangchu()
+                goToNoteScreen()
             } else {
                 LoginRegisterScreen(
                     onRegister = { email, password -> registerUser(email, password) },
@@ -48,29 +50,92 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun registerUser(email: String, password: String) {
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Toast.makeText(this, "Đăng ký thành công", Toast.LENGTH_SHORT).show()
-                    goToNoteScreen()
-                } else {
-                    Toast.makeText(this, "Lỗi: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-    }
+//    private fun registerUser(email: String, password: String) {
+//        auth.createUserWithEmailAndPassword(email, password)
+//            .addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    Toast.makeText(this, "Đăng ký thành công", Toast.LENGTH_SHORT).show()
+//                    goToNoteScreen()
+//                } else {
+//                    Toast.makeText(this, "Lỗi: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//    }
+private fun registerUser(email: String, password: String) {
+    auth.createUserWithEmailAndPassword(email, password)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val user = auth.currentUser
+                val db = FirebaseFirestore.getInstance()
 
-    private fun loginUser(email: String, password: String) {
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Toast.makeText(this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show()
-                    goToTrangchu()
-                } else {
-                    Toast.makeText(this, "Sai tài khoản hoặc mật khẩu", Toast.LENGTH_SHORT).show()
+                val userData = hashMapOf(
+                    "email" to email,
+                    "name" to "Người dùng mới", // bạn có thể cho nhập tên nếu muốn
+                    "role" to 1 // mặc định là người thường
+                )
+
+                user?.email?.let {
+                    db.collection("users").document(it)
+                        .set(userData)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Đăng ký thành công", Toast.LENGTH_SHORT).show()
+                            goToTrangchu() // mặc định về trang chủ
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "Đăng ký thất bại khi lưu role", Toast.LENGTH_SHORT).show()
+                        }
                 }
+            } else {
+                Toast.makeText(this, "Lỗi: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
             }
-    }
+        }
+}
+
+
+//    private fun loginUser(email: String, password: String) {
+//        auth.signInWithEmailAndPassword(email, password)
+//            .addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    Toast.makeText(this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show()
+//                    goToTrangchu()
+//                } else {
+//                    Toast.makeText(this, "Sai tài khoản hoặc mật khẩu", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//    }
+private fun loginUser(email: String, password: String) {
+    auth.signInWithEmailAndPassword(email, password)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val userEmail = auth.currentUser?.email
+                val db = FirebaseFirestore.getInstance()
+
+                db.collection("users").document(userEmail ?: "")
+                    .get()
+                    .addOnSuccessListener { document ->
+                        if (document != null && document.exists()) {
+                            val role = document.getLong("role")?.toInt()
+
+                            if (role == 2) {
+                                // ADMIN
+                                Toast.makeText(this, "Đăng nhập thành công (Admin)", Toast.LENGTH_SHORT).show()
+                                startActivity(Intent(this, NoteActivity::class.java))
+                            } else {
+                                // NGƯỜI DÙNG THƯỜNG
+                                Toast.makeText(this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show()
+                                startActivity(Intent(this, TrangchuActivity::class.java))
+                            }
+                            finish()
+                        } else {
+                            Toast.makeText(this, "Không tìm thấy thông tin người dùng", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                Toast.makeText(this, "Sai tài khoản hoặc mật khẩu", Toast.LENGTH_SHORT).show()
+            }
+        }
+}
+
 
     private fun goToNoteScreen() {
         startActivity(Intent(this, NoteActivity::class.java))
