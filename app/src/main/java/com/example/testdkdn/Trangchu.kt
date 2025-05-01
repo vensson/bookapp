@@ -2,6 +2,7 @@ package com.example.testdkdn
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -29,25 +30,33 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.testdkdn.ui.theme.TestDKDNTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+
+
 
 class TrangchuActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Lấy role từ Intent
+        val role = intent.getIntExtra("ROLE", 1) // Default role = 1 nếu không có
+
         setContent {
             TestDKDNTheme {
-                MainScreen()
+                MainScreen(role)
             }
         }
     }
 
     @Composable
-    fun MainScreen() {
+    fun MainScreen(role: Int) {
         var selectedIndex by remember { mutableStateOf(0) }
 
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 when (selectedIndex) {
-                    0 -> Trangchu()
+                    0 -> Trangchu(role)
                     1 -> GioHang()
                     2 -> CaNhan()
                 }
@@ -77,7 +86,7 @@ class TrangchuActivity : ComponentActivity() {
     }
 
     @Composable
-    fun Trangchu() {
+    fun Trangchu(role: Int) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -97,14 +106,14 @@ class TrangchuActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                BookCard("sach1", "Trân trọng chính mình", "120.000đ")
-                BookCard("sach2", "Vấp ngã để trưởng thành ", "95.000đ")
+                BookCard("sach1", "Trân trọng chính mình", "120.000đ", role)
+                BookCard("sach2", "Vấp ngã để trưởng thành ", "95.000đ", role)
             }
         }
     }
 
     @Composable
-    fun BookCard(imageName: String, title: String, price: String) {
+    fun BookCard(imageName: String, title: String, price: String, role: Int) {
         val context = LocalContext.current
         val imageId = remember(imageName) {
             context.resources.getIdentifier(imageName, "drawable", context.packageName)
@@ -173,10 +182,24 @@ class TrangchuActivity : ComponentActivity() {
                     Text("Xem", fontSize = 12.sp)
                 }
 
+                // Chỉ hiển thị nút sửa nếu role là admin (role == 2)
+                if (role == 2) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = {
+                            // Xử lý nút sửa
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)),
+                        shape = RoundedCornerShape(6.dp),
+                        contentPadding = PaddingValues(4.dp)
+                    ) {
+                        Text("Sửa", fontSize = 12.sp)
+                    }
+                }
             }
         }
     }
-
 
     @Composable
     fun GioHang() {
@@ -198,3 +221,4 @@ class TrangchuActivity : ComponentActivity() {
         }
     }
 }
+

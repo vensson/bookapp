@@ -103,6 +103,7 @@ private fun registerUser(email: String, password: String) {
 //                }
 //            }
 //    }
+// Đoạn code trong Activity đăng nhập (LoginActivity hoặc tương tự)
 private fun loginUser(email: String, password: String) {
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
@@ -116,16 +117,16 @@ private fun loginUser(email: String, password: String) {
                         if (document != null && document.exists()) {
                             val role = document.getLong("role")?.toInt()
 
-                            if (role == 2) {
-                                // ADMIN
-                                Toast.makeText(this, "Đăng nhập thành công (Admin)", Toast.LENGTH_SHORT).show()
-                                startActivity(Intent(this, NoteActivity::class.java))
+                            if (role != null) {
+                                // Truyền role vào Intent khi đăng nhập thành công
+                                val intent = Intent(this, TrangchuActivity::class.java).apply {
+                                    putExtra("ROLE", role)
+                                }
+                                startActivity(intent)
+                                finish()
                             } else {
-                                // NGƯỜI DÙNG THƯỜNG
-                                Toast.makeText(this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show()
-                                startActivity(Intent(this, TrangchuActivity::class.java))
+                                Toast.makeText(this, "Không tìm thấy thông tin quyền", Toast.LENGTH_SHORT).show()
                             }
-                            finish()
                         } else {
                             Toast.makeText(this, "Không tìm thấy thông tin người dùng", Toast.LENGTH_SHORT).show()
                         }
@@ -135,6 +136,7 @@ private fun loginUser(email: String, password: String) {
             }
         }
 }
+
 
 
     private fun goToNoteScreen() {
