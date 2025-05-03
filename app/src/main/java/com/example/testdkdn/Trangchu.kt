@@ -126,7 +126,8 @@ class TrangchuActivity : ComponentActivity() {
         if (role == 2) {
             Button(
                 onClick = {
-                    val intent = Intent(context, ThemsachActivity::class.java)  // Dùng context ngoài onClick
+                    val intent = Intent(this@TrangchuActivity, ThemSachActivity::class.java)
+
                     context.startActivity(intent)
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),

@@ -1,77 +1,150 @@
 package com.example.testdkdn
 
+import android.net.Uri
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class ThemsachActivity : ComponentActivity() {
+class ThemSachActivity : ComponentActivity() {
+
+    private val db = FirebaseFirestore.getInstance()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
-            ThemsachScreen()
-        }
-    }
-}
+            var imageUri by remember { mutableStateOf<Uri?>(null) }
+            var title by remember { mutableStateOf("") }
+            var author by remember { mutableStateOf("") }
+            var description by remember { mutableStateOf("") }
+            var category by remember { mutableStateOf("") }
+            var rating by remember { mutableStateOf(0.0) }
+            var imageUrl by remember { mutableStateOf("") }
 
-@Composable
-fun ThemsachScreen() {
-    val context = LocalContext.current
-    val db = FirebaseFirestore.getInstance()
+            // Launcher for image selection
+            val imagePickerLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.GetContent()
+            ) { uri: Uri? ->
+                imageUri = uri
+            }
 
-    var title by remember { mutableStateOf(TextFieldValue("")) }
-    var author by remember { mutableStateOf(TextFieldValue("")) }
-    var category by remember { mutableStateOf(TextFieldValue("")) }
-    var description by remember { mutableStateOf(TextFieldValue("")) }
-    var imageUrl by remember { mutableStateOf(TextFieldValue("")) }
-    var rating by remember { mutableStateOf(TextFieldValue("")) }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Button(onClick = {
+                    imagePickerLauncher.launch("image/*")
+                }) {
+                    Text(text = "Chọn ảnh")
+                }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Thêm Sách", style = MaterialTheme.typography.titleLarge)
+                imageUri?.let {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Image(
+                        painter = rememberAsyncImagePainter(it),
+                        contentDescription = "Ảnh đã chọn",
+                        modifier = Modifier.height(200.dp).fillMaxWidth()
+                    )
+                }
 
-        OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Tiêu đề") })
-        OutlinedTextField(value = author, onValueChange = { author = it }, label = { Text("Tác giả") })
-        OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Thể loại") })
-        OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Mô tả") })
-        OutlinedTextField(value = imageUrl, onValueChange = { imageUrl = it }, label = { Text("Link ảnh (image_url)") })
-        OutlinedTextField(value = rating, onValueChange = { rating = it }, label = { Text("Đánh giá (rating)") })
+                Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = {
-                val book = hashMapOf(
-                    "title" to title.text,
-                    "author" to author.text,
-                    "category" to category.text,
-                    "description" to description.text,
-                    "image_url" to imageUrl.text,
-                    "rating" to rating.text
+                // Nhập thông tin sách
+                TextField(value = title, onValueChange = { title = it }, label = { Text("Tên sách") })
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(value = author, onValueChange = { author = it }, label = { Text("Tác giả") })
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(value = description, onValueChange = { description = it }, label = { Text("Mô tả") })
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(value = category, onValueChange = { category = it }, label = { Text("Thể loại") })
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = rating.toString(),
+                    onValueChange = { rating = it.toDoubleOrNull() ?: 0.0 },
+                    label = { Text("Đánh giá") }
                 )
 
-                db.collection("books")
-                    .add(book)
-                    .addOnSuccessListener {
-                        Toast.makeText(context, "Đã thêm sách!", Toast.LENGTH_SHORT).show()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(onClick = {
+                    if (imageUri != null && title.isNotEmpty() && author.isNotEmpty()) {
+                        uploadImageToCloudinary(imageUri!!) { url ->
+                            imageUrl = url
+                            val book = Book(
+                                title = title,
+                                author = author,
+                                description = description,
+                                category = category,
+                                rating = rating,
+                                image_url = imageUrl
+                            )
+                            saveBookToFirestore(book)
+                        }
+                    } else {
+                        Toast.makeText(this@ThemSachActivity, "Vui lòng chọn ảnh và nhập đầy đủ thông tin sách", Toast.LENGTH_SHORT).show()
                     }
-                    .addOnFailureListener {
-                        Toast.makeText(context, "Lỗi khi thêm sách!", Toast.LENGTH_SHORT).show()
-                    }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Thêm")
+                }) {
+                    Text("Lưu sách")
+                }
+            }
         }
+    }
+
+    private fun uploadImageToCloudinary(uri: Uri, onSuccess: (String) -> Unit) {
+        // Tải ảnh lên Cloudinary và lấy link
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val imageUrl = uploadImage(uri)
+                withContext(Dispatchers.Main) {
+                    onSuccess(imageUrl)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@ThemSachActivity, "Lỗi khi upload ảnh: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun uploadImage(uri: Uri): String {
+        // Logic upload ảnh lên Cloudinary và trả về `secure_url`
+        // (Dùng hàm tương tự như trong app upload ảnh của bạn)
+        // Trả về secure_url ảnh sau khi upload thành công
+        return "https://res.cloudinary.com/dujmhnsee/image/upload/v1/example_image.jpg"  // Giả sử đây là URL trả về từ Cloudinary
+    }
+
+    private fun saveBookToFirestore(book: Book) {
+        db.collection("books")
+            .add(book)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Thêm sách thành công!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Lỗi khi thêm sách: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }
