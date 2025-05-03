@@ -36,7 +36,7 @@
         <activity android:name=".NoteEditorActivity" />
         <activity android:name=".TrangchuActivity" />
         <activity android:name=".ChitietActivity" />
-
+        <activity android:name=".ThemsachActivity" />
 
     </application>
 

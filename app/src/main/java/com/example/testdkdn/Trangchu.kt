@@ -96,6 +96,8 @@ class TrangchuActivity : ComponentActivity() {
 
     @Composable
     fun Trangchu(role: Int) {
+        val context = LocalContext.current  // Lấy context ở đây
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -119,7 +121,24 @@ class TrangchuActivity : ComponentActivity() {
                 BookCard("sach2", "Vấp ngã để trưởng thành ", "95.000đ", role)
             }
         }
+
+        // Kiểm tra role để hiển thị nút "Thêm sản phẩm"
+        if (role == 2) {
+            Button(
+                onClick = {
+                    val intent = Intent(context, ThemsachActivity::class.java)  // Dùng context ngoài onClick
+                    context.startActivity(intent)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .fillMaxWidth(0.9f)
+            ) {
+                Text("Thêm sản phẩm", color = Color.White)
+            }
+        }
     }
+
 
     @Composable
     fun BookCard(imageName: String, title: String, price: String, role: Int) {
