@@ -376,18 +376,34 @@ class TrangchuActivity : ComponentActivity() {
     }
     @Composable
     fun CheckoutOptionsSection() {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .padding(12.dp)) {
+        val context = LocalContext.current
 
-            CheckoutOption("Phương thức thanh toán", "Chưa chọn") { /* mở chọn */ }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
+                .padding(12.dp)
+        ) {
+            CheckoutOption("Phương thức thanh toán", "Chưa chọn") {
+                // Chuyển màn hình sang PhuongthucTT
+                val intent = Intent(context, PhuongThucTT::class.java)
+                context.startActivity(intent)
+            }
+
             Divider()
-            CheckoutOption("Địa chỉ giao hàng", "Chưa chọn") { /* mở chọn */ }
+
+            CheckoutOption("Địa chỉ giao hàng", "Chưa chọn") {
+                // TODO: mở giao diện chọn địa chỉ giao hàng
+            }
+
             Divider()
-            CheckoutOption("Khuyến mãi", "Chưa áp dụng") { /* mở chọn */ }
+
+            CheckoutOption("Khuyến mãi", "Chưa áp dụng") {
+                // TODO: mở giao diện chọn khuyến mãi
+            }
         }
     }
+
 
     @Composable
     fun CheckoutOption(title: String, value: String, onClick: () -> Unit) {
