@@ -3,7 +3,8 @@ package com.example.testdkdn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-
+import java.text.NumberFormat
+import java.util.Locale
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -190,8 +191,10 @@ class TrangchuActivity : ComponentActivity() {
                         .clip(RoundedCornerShape(8.dp)),
                     contentScale = ContentScale.Crop
                 )
-
+                val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+                val formattedPrice = formatter.format(book.price)
                 Text(book.title, fontWeight = FontWeight.Bold)
+                Text(text = "Giá: $formattedPrice")
                 Text("Tác giả: ${book.author}", fontSize = 12.sp, color = Color.Gray)
                 Text("Thể loại: ${book.category}", fontSize = 12.sp)
                 Text("Rating: ${book.rating}", fontSize = 12.sp)

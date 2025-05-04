@@ -20,6 +20,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -47,6 +49,7 @@ class ThemSachActivity : ComponentActivity() {
             var category by remember { mutableStateOf("") }
             var rating by remember { mutableStateOf(0.0) }
             var imageUrl by remember { mutableStateOf("") }
+            var price by remember { mutableStateOf(0.0) }
 
             // Launcher for image selection
             val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -58,7 +61,9 @@ class ThemSachActivity : ComponentActivity() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(onClick = {
@@ -81,6 +86,13 @@ class ThemSachActivity : ComponentActivity() {
                 // Nhập thông tin sách
                 TextField(value = title, onValueChange = { title = it }, label = { Text("Tên sách") })
                 Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = price.toString(),
+                    onValueChange = { price = it.toDoubleOrNull() ?: 0.0 },
+                    label = { Text("Giá") }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
                 TextField(value = author, onValueChange = { author = it }, label = { Text("Tác giả") })
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(value = description, onValueChange = { description = it }, label = { Text("Mô tả") })
@@ -92,6 +104,7 @@ class ThemSachActivity : ComponentActivity() {
                     onValueChange = { rating = it.toDoubleOrNull() ?: 0.0 },
                     label = { Text("Đánh giá") }
                 )
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -105,7 +118,8 @@ class ThemSachActivity : ComponentActivity() {
                                 description = description,
                                 category = category,
                                 rating = rating,
-                                image_url = imageUrl
+                                image_url = imageUrl,
+                                price = price
                             )
                             saveBookToFirestore(book)
                         }
