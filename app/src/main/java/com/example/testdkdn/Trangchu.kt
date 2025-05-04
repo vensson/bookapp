@@ -225,7 +225,19 @@ class TrangchuActivity : ComponentActivity() {
                     Spacer(modifier = Modifier.height(4.dp))
                     Button(
                         onClick = {
-                            // xử lý sửa
+                            val intent = Intent(context, SuaSachActivity::class.java).apply {
+
+                                putExtra("title", book.title)
+                                putExtra("author", book.author)
+                                putExtra("description", book.description)
+                                putExtra("image_url", book.image_url)
+                                putExtra("category", book.category)
+                                putExtra("rating", book.rating)
+                                putExtra("description", book.description)
+                                putExtra("price", book.price)
+                            }
+                            startActivity(intent)
+
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))

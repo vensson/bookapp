@@ -46,68 +46,6 @@ class ChitietActivity : ComponentActivity() {
     }
 }
 
-//@Composable
-//fun ChitietScreen(imageUrl: String, title: String, author: String, description: String) {
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .background(Color(0xFFF0F8FF))
-//            .padding(16.dp),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        AsyncImage(
-//            model = imageUrl,
-//            contentDescription = title,
-//            modifier = Modifier
-//                .height(300.dp)
-//                .fillMaxWidth()
-//                .clip(RoundedCornerShape(16.dp)),
-//            contentScale = ContentScale.Crop
-//        )
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        Text(
-//            text = title,
-//            fontSize = 22.sp,
-//            fontWeight = FontWeight.Bold,
-//            color = Color(0xFF023E8A)
-//        )
-//
-//        Spacer(modifier = Modifier.height(4.dp))
-//
-//        Text(
-//            text = "Tác giả: $author",
-//            fontSize = 16.sp,
-//            color = Color(0xFF0077B6)
-//        )
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        Text(
-//            text = description,
-//            fontSize = 14.sp,
-//            color = Color.DarkGray,
-//            lineHeight = 20.sp,
-//            modifier = Modifier.padding(horizontal = 8.dp)
-//        )
-//
-//        Spacer(modifier = Modifier.height(24.dp))
-//
-//        Button(
-//            onClick = {
-//                // Chức năng mua
-//            },
-//            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0077B6)),
-//            shape = RoundedCornerShape(12.dp),
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(50.dp)
-//        ) {
-//            Text(text = "Mua ngay", fontSize = 16.sp, color = Color.White)
-//        }
-//    }
-//}
 @Composable
 fun ChitietScreen(imageUrl: String, title: String, author: String, description: String, category: String, rating: String) {
     Column(
