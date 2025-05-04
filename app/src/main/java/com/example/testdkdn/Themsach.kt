@@ -1,10 +1,17 @@
 package com.example.testdkdn
 
+
 import android.net.Uri
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -13,7 +20,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -22,10 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.example.testdkdn.Book
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import java.io.File
 
 class ThemSachActivity : ComponentActivity() {
 
@@ -131,10 +136,39 @@ class ThemSachActivity : ComponentActivity() {
     }
 
     private fun uploadImage(uri: Uri): String {
-        // Logic upload ảnh lên Cloudinary và trả về `secure_url`
-        // (Dùng hàm tương tự như trong app upload ảnh của bạn)
-        // Trả về secure_url ảnh sau khi upload thành công
-        return "https://res.cloudinary.com/dujmhnsee/image/upload/v1/example_image.jpg"  // Giả sử đây là URL trả về từ Cloudinary
+        val contentResolver = contentResolver
+        val inputStream = contentResolver.openInputStream(uri)
+
+        if (inputStream == null) {
+            throw Exception("Không thể mở InputStream từ URI.")
+        }
+
+        val requestBody = inputStream.readBytes().toRequestBody("image/*".toMediaTypeOrNull())
+        val cloudName = "dujmhnsee" // Thay bằng cloud name của bạn
+        val uploadPreset = "my_unsigned_preset" // Thay bằng preset của bạn
+
+        val part = MultipartBody.Part.createFormData("file", "image.jpg", requestBody)
+
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("https://api.cloudinary.com/v1_1/$cloudName/image/upload")
+            .post(MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("upload_preset", uploadPreset)
+                .addFormDataPart("file", "image.jpg", requestBody)
+                .build())
+            .build()
+
+        val response = client.newCall(request).execute()
+        val responseBody = response.body?.string()
+
+        if (response.isSuccessful && responseBody != null) {
+            val jsonResponse = JSONObject(responseBody)
+            val imageUrl = jsonResponse.getString("secure_url")
+            return imageUrl
+        } else {
+            throw Exception("Lỗi khi upload ảnh lên Cloudinary: ${response.code}")
+        }
     }
 
     private fun saveBookToFirestore(book: Book) {
