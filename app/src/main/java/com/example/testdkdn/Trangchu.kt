@@ -207,6 +207,11 @@ class TrangchuActivity : ComponentActivity() {
                             putExtra("author", book.author)
                             putExtra("description", book.description)
                             putExtra("image_url", book.image_url)
+                            putExtra("category", book.category)
+                            putExtra("rating", book.rating)
+                            putExtra("description", book.description)
+                            putExtra("price", book.price)
+
                         }
                         context.startActivity(intent)
                     },
@@ -293,6 +298,7 @@ class TrangchuActivity : ComponentActivity() {
                             putExtra("imageName", imageName)
                             putExtra("title", title)
                             putExtra("price", price)
+
                         }
                         context.startActivity(intent)
                     },
@@ -414,6 +420,7 @@ class TrangchuActivity : ComponentActivity() {
                             putExtra("imageName", imageName)
                             putExtra("title", title)
                             putExtra("price", price)
+
                         }
                         context.startActivity(intent)
                     }) {
