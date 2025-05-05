@@ -81,7 +81,7 @@ fun SuaSachScreen(
     var author by remember { mutableStateOf(initAuthor) }
     var description by remember { mutableStateOf(initDescription) }
     var category by remember { mutableStateOf(initCategory) }
-    var rating by remember { mutableStateOf(initRating) }
+    var rating by remember { mutableStateOf(initRating) }  // Đây là giá trị rating dạng String từ Firestore
 
     Column(
         modifier = Modifier
@@ -125,22 +125,28 @@ fun SuaSachScreen(
 
         Button(
             onClick = {
+                // Chuyển đổi rating từ String sang Double
+                val ratingValue = try {
+                    rating.toDouble()  // Cố gắng chuyển đổi sang Double
+                } catch (e: NumberFormatException) {
+                    0.0  // Nếu không thể chuyển đổi, gán giá trị mặc định là 0.0
+                }
+
                 val updatedBook = hashMapOf(
                     "title" to title,
                     "author" to author,
                     "description" to description,
                     "category" to category,
-                    "rating" to rating,
+                    "rating" to ratingValue,  // Sử dụng rating đã chuyển đổi thành Double
                     "image_url" to imageUrl
                 )
 
                 FirebaseFirestore.getInstance()
                     .collection("books")
                     .document(documentId)
-                    .set(updatedBook, SetOptions.merge())  // <-- Gộp thông tin, không xóa cũ
+                    .set(updatedBook, SetOptions.merge())  // Gộp thông tin, không xóa cũ
                     .addOnSuccessListener { onUpdateSuccess() }
                     .addOnFailureListener { onUpdateFail() }
-
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0077B6)),
             shape = RoundedCornerShape(12.dp),
@@ -152,3 +158,5 @@ fun SuaSachScreen(
         }
     }
 }
+
+
