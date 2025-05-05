@@ -190,6 +190,7 @@ class ThemSachActivity : ComponentActivity() {
             .add(book)
             .addOnSuccessListener {
                 Toast.makeText(this, "Thêm sách thành công!", Toast.LENGTH_SHORT).show()
+                finish()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Lỗi khi thêm sách: ${e.message}", Toast.LENGTH_SHORT).show()
