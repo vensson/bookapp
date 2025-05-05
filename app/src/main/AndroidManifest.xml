@@ -39,6 +39,10 @@
         <activity android:name=".ChitietActivity" />
         <activity android:name=".ThemSachActivity" />
         <activity android:name=".SuaSachActivity" />
+        <activity android:name=".QuanLySachActivity" />
+
+
+
 
     </application>
 

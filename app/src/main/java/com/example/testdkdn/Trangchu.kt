@@ -1,11 +1,21 @@
 package com.example.testdkdn
-
+import android.content.Intent
+import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import java.text.NumberFormat
 import java.util.Locale
-import android.content.Intent
+
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -17,9 +27,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -41,11 +50,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.grid.items
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 
 
@@ -66,6 +73,7 @@ class TrangchuActivity : ComponentActivity() {
     @Composable
     fun MainScreen(role: Int) {
         var selectedIndex by remember { mutableStateOf(0) }
+        val isAdmin = role == 2 // Kiểm tra có phải admin không
 
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
@@ -73,27 +81,129 @@ class TrangchuActivity : ComponentActivity() {
                     0 -> Trangchu(role)
                     1 -> GioHang()
                     2 -> CaNhan()
+                    3 -> AdminScreen() // Màn hình Admin
                 }
             }
 
             NavigationBar(containerColor = Color(0xFF0077B6)) {
+                // Trang chủ
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Home, contentDescription = "Trang chủ") },
                     label = { Text("Trang chủ", color = Color.White) },
                     selected = selectedIndex == 0,
                     onClick = { selectedIndex = 0 }
                 )
+
+                // Giỏ hàng
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Giỏ hàng") },
                     label = { Text("Giỏ hàng", color = Color.White) },
                     selected = selectedIndex == 1,
                     onClick = { selectedIndex = 1 }
                 )
+
+                // Cá nhân
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Person, contentDescription = "Cá nhân") },
                     label = { Text("Cá nhân", color = Color.White) },
                     selected = selectedIndex == 2,
                     onClick = { selectedIndex = 2 }
+                )
+
+                // Admin (chỉ hiển thị khi là admin)
+                if (isAdmin) {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.AdminPanelSettings, contentDescription = "Admin") },
+                        label = { Text("Admin", color = Color.White) },
+                        selected = selectedIndex == 3,
+                        onClick = { selectedIndex = 3 }
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun AdminScreen() {
+        val context = LocalContext.current
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .background(Color(0xFFE3F2FD)),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        )  {
+            Text(
+                text = "Trang Quản Trị",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF0077B6)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Các chức năng quản trị
+            AdminFunctionButton(
+                icon = Icons.Default.List,
+                text = "Quản lý Sách",
+                onClick = {
+                    val intent = Intent(context, QuanLySachActivity::class.java)
+                    context.startActivity(intent)
+                }
+            )
+
+            AdminFunctionButton(
+                icon = Icons.Default.People,
+                text = "Quản lý Người dùng",
+                onClick = {
+                    // Mở màn hình quản lý người dùng
+                }
+            )
+
+            AdminFunctionButton(
+                icon = Icons.Default.BarChart,
+                text = "Thống kê Doanh thu",
+                onClick = {
+                    // Mở màn hình thống kê
+                }
+            )
+        }
+    }
+
+    @Composable
+    fun AdminFunctionButton(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, onClick: () -> Unit) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 8.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White,
+                contentColor = Color(0xFF0077B6)
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 4.dp,
+                pressedElevation = 8.dp
+            )
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = text,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(text = text, fontSize = 16.sp)
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Default.ArrowForward,
+                    contentDescription = "Xem chi tiết",
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -105,23 +215,25 @@ class TrangchuActivity : ComponentActivity() {
         val books = remember { mutableStateListOf<Book>() }
 
         // Lấy dữ liệu từ Firebase Firestore
-        LaunchedEffect(true) {
+        LaunchedEffect(Unit) {
+            // Lấy dữ liệu từ Firestore
             FirebaseFirestore.getInstance().collection("books")
                 .get()
                 .addOnSuccessListener { result ->
                     books.clear()
                     for (document in result) {
-                        val book = document.toObject(Book::class.java)
-                        book?.let {
-                            it.id = document.id // gán document ID vào biến id trong class Book
-                            books.add(it)
+                        val book = document.toObject(Book::class.java).apply {
+                            id = document.id
                         }
-
+                        books.add(book)
                     }
                 }
-                .addOnFailureListener { exception ->
-                    Log.w("Firestore", "Lỗi khi lấy dữ liệu: ", exception)
-                }
+        }
+
+        LazyColumn {
+            items(books) { book ->
+                BookItemAdmin(book = book)
+            }
         }
 
         Column(
@@ -144,7 +256,7 @@ class TrangchuActivity : ComponentActivity() {
                 contentPadding = PaddingValues(4.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                items(books) { book ->
+                items( books) { book ->
                     FirebaseBookCard(book = book, role = role)
                 }
             }
@@ -166,7 +278,41 @@ class TrangchuActivity : ComponentActivity() {
             }
         }
     }
+    @Composable
+    fun BookItemAdmin(book: Book) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AsyncImage(
+                    model = book.image_url,
+                    contentDescription = null,
+                    modifier = Modifier.size(80.dp)
+                )
 
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(book.title, fontWeight = FontWeight.Bold)
+                    Text("Tác giả: ${book.author}")
+                    Text("Giá: ${NumberFormat.getCurrencyInstance(Locale("vi", "VN")).format(book.price)}")
+                }
+
+                IconButton(onClick = { /* Sửa sách */ }) {
+                    Icon(Icons.Default.Edit, contentDescription = "Sửa")
+                }
+
+                IconButton(onClick = { /* Xóa sách */ }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Xóa", tint = Color.Red)
+                }
+            }
+        }
+    }
     @Composable
     fun FirebaseBookCard(book: Book, role: Int) {
         val context = LocalContext.current
@@ -174,8 +320,7 @@ class TrangchuActivity : ComponentActivity() {
         Card(
             modifier = Modifier
                 .width(180.dp)
-                .padding(4.dp)
-            ,
+                .padding(4.dp),
             elevation = CardDefaults.cardElevation(6.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -184,8 +329,6 @@ class TrangchuActivity : ComponentActivity() {
                 modifier = Modifier.padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Nếu dùng Coil để tải ảnh từ URL
-                // rememberAsyncImagePainter(book.image_url)
                 Image(
                     painter = rememberAsyncImagePainter(book.image_url),
                     contentDescription = null,
@@ -215,7 +358,6 @@ class TrangchuActivity : ComponentActivity() {
                             putExtra("rating", book.rating)
                             putExtra("description", book.description)
                             putExtra("price", book.price)
-
                         }
                         context.startActivity(intent)
                     },
@@ -231,7 +373,6 @@ class TrangchuActivity : ComponentActivity() {
                         onClick = {
                             val intent = Intent(context, SuaSachActivity::class.java).apply {
                                 putExtra("docId", book.id)
-
                                 putExtra("title", book.title)
                                 putExtra("author", book.author)
                                 putExtra("description", book.description)
@@ -241,7 +382,6 @@ class TrangchuActivity : ComponentActivity() {
                                 putExtra("price", book.price)
                             }
                             startActivity(intent)
-
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
@@ -253,103 +393,6 @@ class TrangchuActivity : ComponentActivity() {
         }
     }
 
-
-
-    @Composable
-    fun BookCard(imageName: String, title: String, price: String, role: Int) {
-        val context = LocalContext.current
-        val imageId = remember(imageName) {
-            context.resources.getIdentifier(imageName, "drawable", context.packageName)
-        }
-
-        Card(
-            modifier = Modifier
-                .width(180.dp)
-                .padding(4.dp),
-            elevation = CardDefaults.cardElevation(6.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(id = imageId),
-                    contentDescription = title,
-                    modifier = Modifier
-                        .height(190.dp)
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Text(
-                    text = price,
-                    color = Color(0xFF0077B6),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Button(
-                    onClick = {
-                        val intent = Intent(context, ChitietActivity::class.java).apply {
-                            putExtra("imageName", imageName)
-                            putExtra("title", title)
-                            putExtra("price", price)
-
-                        }
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0077B6)),
-                    shape = RoundedCornerShape(6.dp),
-                    contentPadding = PaddingValues(4.dp)
-                ) {
-                    Text("Xem", fontSize = 12.sp)
-                }
-
-                // Chỉ hiển thị nút sửa nếu role là admin (role == 2)
-                if (role == 2) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Button(
-                        onClick = {
-                            // Xử lý nút sửa
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)),
-                        shape = RoundedCornerShape(6.dp),
-                        contentPadding = PaddingValues(4.dp)
-                    ) {
-                        Text("Sửa", fontSize = 12.sp)
-                    }
-                }
-            }
-        }
-    }
-
-
-
-
-    data class CartItemData(val imageName: String, val title: String, val price: String)
-
     @Composable
     fun GioHang() {
         val cartItems = listOf(
@@ -360,7 +403,6 @@ class TrangchuActivity : ComponentActivity() {
         val totalPrice = cartItems.sumOf {
             it.price.replace("đ", "").replace(".", "").toInt()
         }
-
 
         Column(
             modifier = Modifier
@@ -383,14 +425,9 @@ class TrangchuActivity : ComponentActivity() {
                 item { Spacer(modifier = Modifier.height(8.dp)) }
             }
 
-            // Tổng kết thanh toán sẽ luôn hiển thị dưới cùng
-            CheckoutSummary(totalPrice = totalPrice, onOrderClick = {
-                /* xử lý đặt hàng */
-            })
+            CheckoutSummary(totalPrice = totalPrice, onOrderClick = {})
         }
     }
-
-
 
     @Composable
     fun CartItem(
@@ -411,7 +448,6 @@ class TrangchuActivity : ComponentActivity() {
                 .border(1.dp, Color.LightGray, shape = RoundedCornerShape(12.dp))
                 .padding(8.dp)
         ) {
-            // Ảnh sách
             Image(
                 painter = painterResource(id = imageId),
                 contentDescription = title,
@@ -423,12 +459,9 @@ class TrangchuActivity : ComponentActivity() {
 
             Spacer(modifier = Modifier.width(8.dp))
 
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = title, fontWeight = FontWeight.Bold)
-               // Text(text = "Tiểu thuyết", fontSize = 12.sp, color = Color.Gray)
                 Text(text = price, color = Color.Black, fontWeight = FontWeight.SemiBold)
-
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick =  {
@@ -436,26 +469,20 @@ class TrangchuActivity : ComponentActivity() {
                             putExtra("imageName", imageName)
                             putExtra("title", title)
                             putExtra("price", price)
-
                         }
                         context.startActivity(intent)
                     }) {
                         Icon(Icons.Default.Edit, contentDescription = "Sửa")
                     }
                     Spacer(modifier = Modifier.weight(1f))
-                    // xóa
                     IconButton(onClick = {}) {
                         Icon(Icons.Default.Delete, contentDescription = "Xóa")
                     }
 
-
-
-//gaim so luong
                     IconButton(onClick = {}) {
                         Text("-", fontSize = 20.sp, color = Color.Black)
                     }
                     Text("1")
-                    //tang soluong
                     IconButton(onClick = {}) {
                         Text("+", fontSize = 20.sp, color = Color.Black)
                     }
@@ -477,7 +504,6 @@ class TrangchuActivity : ComponentActivity() {
                 Text("Giá:")
                 Text("$totalPrice vnd")
             }
-            // Thêm mục: khuyến mãi, địa chỉ, phương thức
 
             Button(
                 onClick = onOrderClick,
@@ -490,6 +516,7 @@ class TrangchuActivity : ComponentActivity() {
             }
         }
     }
+
     @Composable
     fun CheckoutOptionsSection() {
         val context = LocalContext.current
@@ -501,7 +528,6 @@ class TrangchuActivity : ComponentActivity() {
                 .padding(12.dp)
         ) {
             CheckoutOption("Phương thức thanh toán", "Chưa chọn") {
-                // Chuyển màn hình sang PhuongthucTT
                 val intent = Intent(context, PhuongThucTT::class.java)
                 context.startActivity(intent)
             }
@@ -509,17 +535,16 @@ class TrangchuActivity : ComponentActivity() {
             Divider()
 
             CheckoutOption("Địa chỉ giao hàng", "Chưa chọn") {
-                // TODO: mở giao diện chọn địa chỉ giao hàng
+                // Mở giao diện chọn địa chỉ giao hàng
             }
 
             Divider()
 
             CheckoutOption("Khuyến mãi", "Chưa áp dụng") {
-                // TODO: mở giao diện chọn khuyến mãi
+                // Mở giao diện chọn khuyến mãi
             }
         }
     }
-
 
     @Composable
     fun CheckoutOption(title: String, value: String, onClick: () -> Unit) {
@@ -538,11 +563,6 @@ class TrangchuActivity : ComponentActivity() {
         }
     }
 
-
-
-
-
-
     @Composable
     fun CaNhan() {
         Box(
@@ -552,5 +572,6 @@ class TrangchuActivity : ComponentActivity() {
             Text("Thông tin cá nhân", fontSize = 20.sp, color = Color.Gray)
         }
     }
-}
 
+    data class CartItemData(val imageName: String, val title: String, val price: String)
+}
