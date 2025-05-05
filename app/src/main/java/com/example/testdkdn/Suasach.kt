@@ -1,6 +1,7 @@
 package com.example.testdkdn
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.testdkdn.ui.theme.TestDKDNTheme
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 class SuaSachActivity : ComponentActivity() {
     private val db = FirebaseFirestore.getInstance()
@@ -37,6 +39,7 @@ class SuaSachActivity : ComponentActivity() {
         val description = intent.getStringExtra("description") ?: ""
         val category = intent.getStringExtra("category") ?: ""
         val rating = intent.getStringExtra("rating") ?: ""
+        Log.d("SuaSach", "docId = $documentId")
 
         setContent {
             TestDKDNTheme {
@@ -134,9 +137,10 @@ fun SuaSachScreen(
                 FirebaseFirestore.getInstance()
                     .collection("books")
                     .document(documentId)
-                    .update(updatedBook as Map<String, Any>)
+                    .set(updatedBook, SetOptions.merge())  // <-- Gộp thông tin, không xóa cũ
                     .addOnSuccessListener { onUpdateSuccess() }
                     .addOnFailureListener { onUpdateFail() }
+
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0077B6)),
             shape = RoundedCornerShape(12.dp),

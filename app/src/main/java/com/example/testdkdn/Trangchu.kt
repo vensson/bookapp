@@ -112,7 +112,11 @@ class TrangchuActivity : ComponentActivity() {
                     books.clear()
                     for (document in result) {
                         val book = document.toObject(Book::class.java)
-                        books.add(book)
+                        book?.let {
+                            it.id = document.id // gán document ID vào biến id trong class Book
+                            books.add(it)
+                        }
+
                     }
                 }
                 .addOnFailureListener { exception ->
@@ -226,6 +230,7 @@ class TrangchuActivity : ComponentActivity() {
                     Button(
                         onClick = {
                             val intent = Intent(context, SuaSachActivity::class.java).apply {
+                                putExtra("docId", book.id)
 
                                 putExtra("title", book.title)
                                 putExtra("author", book.author)
@@ -233,7 +238,6 @@ class TrangchuActivity : ComponentActivity() {
                                 putExtra("image_url", book.image_url)
                                 putExtra("category", book.category)
                                 putExtra("rating", book.rating)
-                                putExtra("description", book.description)
                                 putExtra("price", book.price)
                             }
                             startActivity(intent)
