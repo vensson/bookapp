@@ -15,7 +15,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import java.text.NumberFormat
 import java.util.Locale
-
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.DropdownMenuItem
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -209,14 +213,18 @@ class TrangchuActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Trangchu(role: Int) {
         val context = LocalContext.current
         val books = remember { mutableStateListOf<Book>() }
+        val categories = remember { mutableStateListOf<String>() }
+        var selectedCategory by remember { mutableStateOf("Tất cả") }
+        var expanded by remember { mutableStateOf(false) }
 
-        // Lấy dữ liệu từ Firebase Firestore
+        // Lấy dữ liệu sách và danh mục từ Firebase Firestore
         LaunchedEffect(Unit) {
-            // Lấy dữ liệu từ Firestore
+            // Lấy danh sách sách
             FirebaseFirestore.getInstance().collection("books")
                 .get()
                 .addOnSuccessListener { result ->
@@ -226,14 +234,13 @@ class TrangchuActivity : ComponentActivity() {
                             id = document.id
                         }
                         books.add(book)
+
+                        // Thêm category vào danh sách nếu chưa có
+                        if (!categories.contains(book.category)) {
+                            categories.add(book.category)
+                        }
                     }
                 }
-        }
-
-        LazyColumn {
-            items(books) { book ->
-                BookItemAdmin(book = book)
-            }
         }
 
         Column(
@@ -243,6 +250,59 @@ class TrangchuActivity : ComponentActivity() {
                 .background(Color(0xFFE3F2FD)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Phần dropdown để chọn category
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    TextField(
+                        value = selectedCategory,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        label = { Text("Chọn thể loại") },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            disabledContainerColor = Color.White,
+                        )
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        // Option "Tất cả"
+                        DropdownMenuItem(
+                            text = { Text("Tất cả") },
+                            onClick = {
+                                selectedCategory = "Tất cả"
+                                expanded = false
+                            }
+                        )
+
+                        // Các category từ Firebase
+                        categories.forEach { category ->
+                            DropdownMenuItem(
+                                text = { Text(category) },
+                                onClick = {
+                                    selectedCategory = category
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             Text(
                 text = "Sách nổi bật",
                 fontSize = 24.sp,
@@ -251,12 +311,19 @@ class TrangchuActivity : ComponentActivity() {
                 modifier = Modifier.padding(8.dp)
             )
 
+            // Lọc sách theo category được chọn
+            val filteredBooks = if (selectedCategory == "Tất cả") {
+                books
+            } else {
+                books.filter { it.category == selectedCategory }
+            }
+
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(4.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                items( books) { book ->
+                items(filteredBooks) { book ->
                     FirebaseBookCard(book = book, role = role)
                 }
             }
@@ -278,6 +345,7 @@ class TrangchuActivity : ComponentActivity() {
             }
         }
     }
+
     @Composable
     fun BookItemAdmin(book: Book) {
         Card(
