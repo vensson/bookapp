@@ -464,15 +464,6 @@ class TrangchuActivity : ComponentActivity() {
 
 
 
-    @Composable
-    fun CaNhan() {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Thông tin cá nhân", fontSize = 20.sp, color = Color.Gray)
-        }
-    }
+
 
 }
-////aa
