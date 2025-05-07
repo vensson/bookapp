@@ -57,16 +57,73 @@ import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 
 
 @Composable
 fun CaNhan() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    // Lấy thông tin người dùng từ Firebase Auth
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val email = currentUser?.email ?: "Chưa đăng nhập"
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFE3F2FD))
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Thông tin cá nhân", fontSize = 20.sp, color = Color.Gray)
+        AvatarWithEditIcon()
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Hiển thị email dưới ảnh đại diện
+        Text(
+            text = email,
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.Black
+        )
+
     }
 }
+@Composable
+fun AvatarWithEditIcon() {
+    Box(
+        modifier = Modifier
+            .size(150.dp),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+
+        Image(
+            painter = painterResource(id = R.drawable.sach1),
+            contentDescription = "Avatar",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .border(3.dp, Color.Black, CircleShape)
+        )
+
+
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(Color.White)
+                .border(1.dp, Color.LightGray, CircleShape)
+                .clickable {
+                    //chonjn anh tu thu viện
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = "Thay ảnh đại diện",
+                tint = Color.Gray,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
