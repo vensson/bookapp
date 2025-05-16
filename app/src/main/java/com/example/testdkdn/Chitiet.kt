@@ -34,12 +34,14 @@ class ChitietActivity : ComponentActivity() {
         val author = intent.getStringExtra("author") ?: ""
         val description = intent.getStringExtra("description") ?: ""
         val category = intent.getStringExtra("category") ?: ""
-        val rating = intent.getStringExtra("rating") ?: ""
+//        val formattedRating = intent.getStringExtra("rating") ?: ""
+        val formattedPrice = intent.getStringExtra("price") ?: ""
+        val rating = intent.getDoubleExtra("rating", 0.0)
 
 
         setContent {
             TestDKDNTheme {
-                ChitietScreen(imageUrl, title, author,description,category,rating)
+                ChitietScreen(imageUrl, title, author,description,category,rating,formattedPrice)
 
             }
         }
@@ -47,7 +49,7 @@ class ChitietActivity : ComponentActivity() {
 }
 
 @Composable
-fun ChitietScreen(imageUrl: String, title: String, author: String, description: String, category: String, rating: String) {
+fun ChitietScreen(imageUrl: String, title: String, author: String, description: String, category: String, rating: Double,formattedPrice:String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -102,6 +104,15 @@ fun ChitietScreen(imageUrl: String, title: String, author: String, description: 
             fontSize = 14.sp,
             color = Color(0xFF0077B6)
         )
+        Spacer(modifier = Modifier.height(8.dp))
+
+// Giá sản phẩm
+        Text(
+            text = "Giá: $formattedPrice VNĐ",
+            fontSize = 23.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFd00000)
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -127,7 +138,7 @@ fun ChitietScreen(imageUrl: String, title: String, author: String, description: 
                 .fillMaxWidth()
                 .height(50.dp)
         ) {
-            Text(text = "Mua ngay", fontSize = 16.sp, color = Color.White)
+            Text(text = "Thêm vào giỏ hàng", fontSize = 16.sp, color = Color.White)
         }
     }
 }

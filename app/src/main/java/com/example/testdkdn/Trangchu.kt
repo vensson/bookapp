@@ -408,6 +408,8 @@ class TrangchuActivity : ComponentActivity() {
                 )
                 val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
                 val formattedPrice = formatter.format(book.price)
+                val formattedRating = formatter.format(book.rating)
+
                 Text(book.title, fontWeight = FontWeight.Bold)
                 Text(text = "Giá: $formattedPrice")
                 Text("Tác giả: ${book.author}", fontSize = 12.sp, color = Color.Gray)
@@ -423,9 +425,13 @@ class TrangchuActivity : ComponentActivity() {
                             putExtra("description", book.description)
                             putExtra("image_url", book.image_url)
                             putExtra("category", book.category)
+//                            putExtra("rating", formattedRating)
+//                            putExtra("description", book.description)
+                            putExtra("price", formattedPrice)
                             putExtra("rating", book.rating)
-                            putExtra("description", book.description)
-                            putExtra("price", book.price)
+
+
+
                         }
                         context.startActivity(intent)
                     },
@@ -446,8 +452,8 @@ class TrangchuActivity : ComponentActivity() {
                                 putExtra("description", book.description)
                                 putExtra("image_url", book.image_url)
                                 putExtra("category", book.category)
-                                putExtra("rating", book.rating)
-                                putExtra("price", book.price)
+                                putExtra("rating", formattedRating)
+                                putExtra("price", formattedPrice)
                             }
                             startActivity(intent)
                         },
