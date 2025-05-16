@@ -32,4 +32,30 @@ object CartManager {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         prefs.edit().remove(CART_KEY).apply()
     }
+    // Thêm vào CartManager.kt
+    fun removeFromCart(context: Context, book: Book) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+
+        val currentCart = getCart(context).toMutableList()
+        currentCart.removeAll { it.id == book.id }
+
+        val json = Gson().toJson(currentCart)
+        editor.putString(CART_KEY, json)
+        editor.apply()
+    }
+    // Thêm vào CartManager.kt
+    fun updateQuantity(context: Context, book: Book, newQuantity: Int) {
+        val currentCart = getCart(context).toMutableList()
+        val index = currentCart.indexOfFirst { it.id == book.id }
+        if (index != -1) {
+            currentCart[index] = book.copy(quantity = newQuantity)
+            saveCart(context, currentCart)
+        }
+    }
+
+    private fun saveCart(context: Context, items: List<Book>) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(CART_KEY, Gson().toJson(items)).apply()
+    }
 }
