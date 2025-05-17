@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 
 @Composable
@@ -30,8 +31,11 @@ fun GioHangScreen() {
     val context = LocalContext.current
     var cartItems by remember { mutableStateOf(CartManager.getCart(context)) }
     var firestoreBooks by remember { mutableStateOf<List<Book>>(emptyList()) }
+    val user = Firebase.auth.currentUser
+    var expanded by remember { mutableStateOf(false) }
+    var phone by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
 
-    // Load sách từ Firestore
     LaunchedEffect(true) {
         Firebase.firestore.collection("books")
             .get()
@@ -41,15 +45,50 @@ fun GioHangScreen() {
             }
     }
 
-    // Cập nhật giá từng sản phẩm trong giỏ hàng
     val updatedCartItems = cartItems.map { cartBook ->
         val matchedBook = firestoreBooks.find { it.title == cartBook.title }
-        if (matchedBook != null) {
-            cartBook.copy(price = matchedBook.price)
-        } else cartBook
+        if (matchedBook != null) cartBook.copy(price = matchedBook.price)
+        else cartBook
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
+        // Địa chỉ giao hàng - expandable section
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .clickable { expanded = !expanded },
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Địa chỉ giao hàng", fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null
+                    )
+                }
+
+                if (expanded) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = phone,
+                        onValueChange = { phone = it },
+                        label = { Text("Số điện thoại") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = address,
+                        onValueChange = { address = it },
+                        label = { Text("Địa chỉ") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(updatedCartItems) { item ->
                 CartItem(
@@ -76,11 +115,53 @@ fun GioHangScreen() {
         CheckoutSummary(
             totalPrice = updatedCartItems.sumOf { it.price * (it.quantity ?: 1) }.toInt(),
             onOrderClick = {
-                Toast.makeText(context, "Đặt hàng thành công", Toast.LENGTH_SHORT).show()
+                val finalCart = CartManager.getCart(context)
+
+                if (finalCart.isEmpty()) {
+                    Toast.makeText(context, "Giỏ hàng trống!", Toast.LENGTH_SHORT).show()
+                    return@CheckoutSummary
+                }
+
+                if (phone.isBlank() || address.isBlank()) {
+                    Toast.makeText(context, "Vui lòng nhập số điện thoại và địa chỉ giao hàng!", Toast.LENGTH_SHORT).show()
+                    return@CheckoutSummary
+                }
+
+                val orderData = mapOf(
+                    "userId" to user?.uid,
+                    "userEmail" to user?.email,
+                    "phone" to phone,
+                    "address" to address,
+                    "items" to finalCart.map {
+                        mapOf(
+                            "title" to it.title,
+                            "quantity" to (it.quantity ?: 1),
+                            "price" to it.price
+                        )
+                    },
+                    "timestamp" to System.currentTimeMillis()
+                )
+
+
+                Firebase.firestore.collection("orders")
+                    .add(orderData)
+                    .addOnSuccessListener {
+                        Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
+                        CartManager.clearCart(context)
+
+                        val intent = Intent(context, ThongBao::class.java)
+                        intent.putExtra("orderId", it.id) // Gửi ID đơn hàng sang ThongBao
+                        context.startActivity(intent)
+                    }
+
+                    .addOnFailureListener {
+                        Toast.makeText(context, "Lỗi khi đặt hàng!", Toast.LENGTH_SHORT).show()
+                    }
             }
         )
     }
 }
+
 
 
 

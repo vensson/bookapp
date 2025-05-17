@@ -168,7 +168,7 @@ class TrangchuActivity : ComponentActivity() {
 
             AdminFunctionButton(
                 icon = Icons.Default.BarChart,
-                text = "Thống kê Doanh thu",
+                text = "Quản lý đơn hàng",
                 onClick = {
                     // Mở màn hình thống kê
                 }
