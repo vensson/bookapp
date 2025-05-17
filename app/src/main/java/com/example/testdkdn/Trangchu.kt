@@ -162,7 +162,8 @@ class TrangchuActivity : ComponentActivity() {
                 icon = Icons.Default.People,
                 text = "Quản lý Người dùng",
                 onClick = {
-                    // Mở màn hình quản lý người dùng
+                    val intent = Intent(context, QuanLyNguoiDung::class.java)
+                    context.startActivity(intent)
                 }
             )
 

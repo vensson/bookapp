@@ -64,9 +64,10 @@ import coil.compose.rememberAsyncImagePainter
 
 @Composable
 fun CaNhan() {
-    // Lấy thông tin người dùng từ Firebase Auth
     val currentUser = FirebaseAuth.getInstance().currentUser
     val email = currentUser?.email ?: "Chưa đăng nhập"
+
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -78,15 +79,23 @@ fun CaNhan() {
         AvatarWithEditIcon()
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Hiển thị email dưới ảnh đại diện
         Text(
             text = email,
             style = MaterialTheme.typography.bodyLarge,
             color = Color.Black
         )
 
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Button(onClick = {
+            val intent = Intent(context, ThongBao::class.java)
+            context.startActivity(intent)
+        }) {
+            Text("Xem đơn hàng")
+        }
     }
 }
+
 @Composable
 fun AvatarWithEditIcon() {
     Box(
@@ -94,7 +103,6 @@ fun AvatarWithEditIcon() {
             .size(150.dp),
         contentAlignment = Alignment.BottomEnd
     ) {
-
         Image(
             painter = painterResource(id = R.drawable.sach1),
             contentDescription = "Avatar",
@@ -105,7 +113,6 @@ fun AvatarWithEditIcon() {
                 .border(3.dp, Color.Black, CircleShape)
         )
 
-
         Box(
             modifier = Modifier
                 .size(36.dp)
@@ -113,7 +120,7 @@ fun AvatarWithEditIcon() {
                 .background(Color.White)
                 .border(1.dp, Color.LightGray, CircleShape)
                 .clickable {
-                    //chonjn anh tu thu viện
+                    // chọn ảnh từ thư viện
                 },
             contentAlignment = Alignment.Center
         ) {
@@ -126,4 +133,3 @@ fun AvatarWithEditIcon() {
         }
     }
 }
-
