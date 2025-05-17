@@ -56,7 +56,15 @@ fun OrderHistoryScreen() {
                     }
 
                     orders = snapshot?.documents?.mapNotNull { doc ->
-                        doc.toObject(Order::class.java)?.copy(id = doc.id)
+                        // Chuyển trường "status" từ String sang enum OrderStatus, nếu null thì mặc định PENDING
+                        val order = doc.toObject(Order::class.java)
+                        val statusString = doc.getString("status") ?: "PENDING"
+                        val status = try {
+                            OrderStatus.valueOf(statusString)
+                        } catch (e: Exception) {
+                            OrderStatus.PENDING
+                        }
+                        order?.copy(id = doc.id, status = status)
                     } ?: emptyList()
                     isLoading = false
                 }
@@ -105,6 +113,7 @@ fun OrderCard(order: Order) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White)
+                .padding(12.dp)
         ) {
             // Header đơn hàng
             Row(
@@ -131,13 +140,17 @@ fun OrderCard(order: Order) {
                         fontSize = 12.sp
                     )
                 }
+                // Hiển thị trạng thái đơn hàng dưới dạng badge
+                OrderStatusBadge(order.status)
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Thông tin tóm tắt
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -185,6 +198,24 @@ fun OrderCard(order: Order) {
 }
 
 @Composable
+fun OrderStatusBadge(status: OrderStatus) {
+    val (text, color) = when (status) {
+        OrderStatus.PENDING -> "Chờ xử lý" to Color(0xFFFFA500)
+        OrderStatus.APPROVED -> "Đã duyệt" to Color(0xFF4CAF50)
+        OrderStatus.REJECTED -> "Đã từ chối" to Color(0xFFF44336)
+        OrderStatus.DELIVERED -> "Đã giao" to Color(0xFF2196F3)
+    }
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(color.copy(alpha = 0.2f))
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(text, color = color, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+    }
+}
+
+@Composable
 fun OrderItemRow(item: OrderItem, numberFormat: NumberFormat) {
     Row(
         modifier = Modifier
@@ -204,8 +235,10 @@ fun OrderItemRow(item: OrderItem, numberFormat: NumberFormat) {
 
         Column(modifier = Modifier.weight(1f)) {
             Text(item.title, fontWeight = FontWeight.Medium)
-            Text("${numberFormat.format(item.price)}đ x ${item.quantity}",
-                fontSize = 14.sp, color = Color.Gray)
+            Text(
+                "${numberFormat.format(item.price)}đ x ${item.quantity}",
+                fontSize = 14.sp, color = Color.Gray
+            )
         }
 
         Text(
@@ -234,6 +267,10 @@ private fun formatTimestamp(timestamp: Long): String {
     return format.format(date)
 }
 
+enum class OrderStatus {
+    PENDING, APPROVED, REJECTED, DELIVERED
+}
+
 // Dữ liệu đơn hàng
 data class Order(
     val id: String = "",
@@ -243,7 +280,8 @@ data class Order(
     val phone: String = "",
     val address: String = "",
     val items: List<OrderItem> = emptyList(),
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val status: OrderStatus = OrderStatus.PENDING
 )
 
 // Sản phẩm trong đơn hàng

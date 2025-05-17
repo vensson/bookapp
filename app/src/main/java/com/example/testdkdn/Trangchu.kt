@@ -166,13 +166,17 @@ class TrangchuActivity : ComponentActivity() {
                 }
             )
 
+            val context = LocalContext.current
+
             AdminFunctionButton(
                 icon = Icons.Default.BarChart,
                 text = "Quản lý đơn hàng",
                 onClick = {
-                    // Mở màn hình thống kê
+                    val intent = Intent(context, QuanLyDonHang::class.java)
+                    context.startActivity(intent)
                 }
             )
+
         }
     }
 
