@@ -1,34 +1,28 @@
 package com.example.testdkdn
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.NumberFormat
 import java.util.*
@@ -36,28 +30,37 @@ import java.util.*
 class ThongBao : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val orderId = intent.getStringExtra("orderId")
         setContent {
             OrderConfirmationTheme {
-                orderId?.let {
-                    OrderConfirmationScreen(orderId = it)
-                }
+                OrderHistoryScreen()
             }
         }
     }
 }
 
 @Composable
-fun OrderConfirmationScreen(orderId: String) {
-    var orderData by remember { mutableStateOf<Map<String, Any>?>(null) }
-    val numberFormat = remember { NumberFormat.getNumberInstance(Locale.US) }
+fun OrderHistoryScreen() {
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    var orders by remember { mutableStateOf<List<Order>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(orderId) {
-        FirebaseFirestore.getInstance().collection("orders").document(orderId)
-            .get()
-            .addOnSuccessListener {
-                orderData = it.data
-            }
+    LaunchedEffect(currentUser?.uid) {
+        currentUser?.uid?.let { userId ->
+            FirebaseFirestore.getInstance().collection("orders")
+                .whereEqualTo("userId", userId)
+                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        isLoading = false
+                        return@addSnapshotListener
+                    }
+
+                    orders = snapshot?.documents?.mapNotNull { doc ->
+                        doc.toObject(Order::class.java)?.copy(id = doc.id)
+                    } ?: emptyList()
+                    isLoading = false
+                }
+        } ?: run { isLoading = false }
     }
 
     Box(
@@ -65,202 +68,150 @@ fun OrderConfirmationScreen(orderId: String) {
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        // Hình nền với hiệu ứng mờ
-        Image(
-            painter = painterResource(id = R.drawable.nen3),
-            contentDescription = "Background",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(0.1f)
-        )
-
-        // Card chính chứa thông tin hóa đơn
-        orderData?.let { data ->
-            LazyColumn(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                item {
-                    // Header hóa đơn
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(4.dp, RoundedCornerShape(8.dp))
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(Color(0xFF0077B6), Color(0xFF023E8A))
-                                ),
-                                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
-                            )
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            Icons.Filled.CheckCircle,
-                            contentDescription = "Success",
-                            tint = Color.White,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "ĐẶT HÀNG THÀNH CÔNG",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            "Mã đơn hàng: $orderId",
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontSize = 14.sp
-                        )
-                    }
-
-                    // Thông tin khách hàng
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            "THÔNG TIN KHÁCH HÀNG",
-                            color = Color(0xFF0077B6),
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-
-                        InfoRow("Họ tên:", data["userName"]?.toString() ?: "Không có")
-                        InfoRow("Email:", data["userEmail"]?.toString() ?: "Không có")
-                        InfoRow("SĐT:", data["phone"]?.toString() ?: "Không có")
-                        InfoRow("Địa chỉ:", data["address"]?.toString() ?: "Không có")
-                    }
-
-                    // Danh sách sản phẩm header
-                    Text(
-                        "CHI TIẾT ĐƠN HÀNG",
-                        color = Color(0xFF0077B6),
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-                    )
-                }
-
-                // Danh sách sản phẩm
-                val items = data["items"] as? List<Map<String, Any>> ?: emptyList()
-                items(items) { item ->
-                    OrderItemCard(item, numberFormat)
-                }
-
-                // Tổng thanh toán
-                item {
-//                    val total = data["total"]?.toString()?.toDoubleOrNull() ?: 0.0
-                    val total = items.sumOf { item ->
-                        (item["price"] as? Number)?.toDouble()?.times(
-                            (item["quantity"] as? Number)?.toLong() ?: 1L
-                        ) ?: 0.0
-                    }
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        Text(
-                            "TỔNG CỘNG:",
-                            fontSize = 16.sp,
-                            color = Color(0xFF555555)
-                        )
-                        Text(
-                            "${numberFormat.format(total)} VNĐ",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFD00000)
-                        )
-                    }
-
-                    // Footer
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFFF8F8F8))
-                            .padding(16.dp)
-                            .shadow(4.dp, RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp)),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            "Cảm ơn bạn đã mua hàng!",
-                            fontSize = 16.sp,
-                            color = Color(0xFF0077B6),
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            "Đơn hàng sẽ được giao trong 2-3 ngày làm việc",
-                            fontSize = 14.sp,
-                            color = Color(0xFF777777),
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
+        when {
+            isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            orders.isEmpty() -> Text(
+                "Bạn chưa có đơn hàng nào",
+                modifier = Modifier.align(Alignment.Center),
+                color = Color.Gray
+            )
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    items(orders) { order ->
+                        OrderCard(order = order)
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }
-        } ?: run {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center),
-                color = Color(0xFF0077B6)
-            )
         }
     }
 }
 
 @Composable
-fun OrderItemCard(item: Map<String, Any>, numberFormat: NumberFormat) {
+fun OrderCard(order: Order) {
+    val numberFormat = remember { NumberFormat.getNumberInstance(Locale.US) }
+    var expanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .shadow(2.dp, RoundedCornerShape(8.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+            .shadow(4.dp, RoundedCornerShape(8.dp))
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
         ) {
-
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    item["title"]?.toString() ?: "",
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    "Số lượng: ${item["quantity"]}",
-                    fontSize = 14.sp,
-                    color = Color(0xFF555555)
-                )
+            // Header đơn hàng
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(Color(0xFF0077B6), Color(0xFF023E8A))
+                        )
+                    )
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        "Đơn hàng #${order.id.take(8).uppercase()}",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "Ngày: ${formatTimestamp(order.timestamp)}",
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 12.sp
+                    )
+                }
             }
 
-            Text(
-                text = "${numberFormat.format(
-                    (item["price"] as? Number)?.toDouble()?.times(
-                        (item["quantity"] as? Number)?.toLong() ?: 1L
-                    ) ?: 0.0
-                )}đ",
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF0077B6)
-            )
+            // Thông tin tóm tắt
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Số lượng: ${order.items.sumOf { it.quantity }}", fontSize = 14.sp)
+                    Text(
+                        "Tổng tiền: ${numberFormat.format(order.items.sumOf { it.price * it.quantity })}đ",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                IconButton(
+                    onClick = { expanded = !expanded },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = if (expanded) "Thu gọn" else "Mở rộng",
+                        tint = Color(0xFF0077B6)
+                    )
+                }
+            }
+
+            // Chi tiết đơn hàng
+            if (expanded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Text("Thông tin giao hàng", fontWeight = FontWeight.Bold, color = Color(0xFF0077B6))
+                    InfoRow("Địa chỉ:", order.address)
+                    InfoRow("SĐT:", order.phone)
+
+                    Text("Sản phẩm", fontWeight = FontWeight.Bold, color = Color(0xFF0077B6), modifier = Modifier.padding(top = 8.dp))
+
+                    order.items.forEach { item ->
+                        OrderItemRow(item, numberFormat)
+                        Divider(modifier = Modifier.padding(vertical = 4.dp))
                     }
+                }
+            }
+        }
+    }
+}
 
+@Composable
+fun OrderItemRow(item: OrderItem, numberFormat: NumberFormat) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = item.imageUrl,
+            contentDescription = null,
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(4.dp))
+        )
 
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(item.title, fontWeight = FontWeight.Medium)
+            Text("${numberFormat.format(item.price)}đ x ${item.quantity}",
+                fontSize = 14.sp, color = Color.Gray)
+        }
+
+        Text(
+            "${numberFormat.format(item.price * item.quantity)}đ",
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
@@ -272,18 +223,36 @@ fun InfoRow(label: String, value: String) {
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            label,
-            color = Color(0xFF555555),
-            fontWeight = FontWeight.Medium
-        )
-        Text(
-            value,
-            color = Color.Black,
-            fontWeight = FontWeight.Normal
-        )
+        Text(label, color = Color(0xFF555555))
+        Text(value, color = Color.Black)
     }
 }
+
+private fun formatTimestamp(timestamp: Long): String {
+    val date = Date(timestamp)
+    val format = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    return format.format(date)
+}
+
+// Dữ liệu đơn hàng
+data class Order(
+    val id: String = "",
+    val userId: String = "",
+    val userEmail: String = "",
+    val userName: String = "",
+    val phone: String = "",
+    val address: String = "",
+    val items: List<OrderItem> = emptyList(),
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+// Sản phẩm trong đơn hàng
+data class OrderItem(
+    val title: String = "",
+    val price: Double = 0.0,
+    val quantity: Int = 1,
+    val imageUrl: String = ""
+)
 
 @Composable
 fun OrderConfirmationTheme(content: @Composable () -> Unit) {
