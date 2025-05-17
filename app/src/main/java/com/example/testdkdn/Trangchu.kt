@@ -221,6 +221,8 @@ class TrangchuActivity : ComponentActivity() {
         val categories = remember { mutableStateListOf<String>() }
         var selectedCategory by remember { mutableStateOf("Tất cả") }
         var expanded by remember { mutableStateOf(false) }
+        var searchQuery by remember { mutableStateOf("") }
+
 
         // Lấy dữ liệu sách và danh mục từ Firebase Firestore
         LaunchedEffect(Unit) {
@@ -250,6 +252,20 @@ class TrangchuActivity : ComponentActivity() {
                 .background(Color(0xFFE3F2FD)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                placeholder = { Text("Tìm kiếm theo tên hoặc tác giả") },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White
+                )
+            )
+
             // Phần dropdown để chọn category
             Box(
                 modifier = Modifier
@@ -312,10 +328,9 @@ class TrangchuActivity : ComponentActivity() {
             )
 
             // Lọc sách theo category được chọn
-            val filteredBooks = if (selectedCategory == "Tất cả") {
-                books
-            } else {
-                books.filter { it.category == selectedCategory }
+            val filteredBooks = books.filter { book ->
+                (selectedCategory == "Tất cả" || book.category == selectedCategory) &&
+                        (book.title.contains(searchQuery, ignoreCase = true) || book.author.contains(searchQuery, ignoreCase = true))
             }
 
             LazyVerticalGrid(
