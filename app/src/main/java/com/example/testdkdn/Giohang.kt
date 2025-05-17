@@ -57,6 +57,11 @@ fun GioHangScreen() {
                     onRemove = {
                         CartManager.removeFromCart(context, item)
                         cartItems = CartManager.getCart(context)
+                    },
+                    onQuantityChange = { newQuantity ->
+                        val updatedBook = item.copy(quantity = newQuantity)
+                        CartManager.updateCartItem(context, updatedBook)
+                        cartItems = CartManager.getCart(context)
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -78,14 +83,14 @@ fun GioHangScreen() {
 }
 
 
+
 // CartItem được điều chỉnh để phù hợp với Book class
 @Composable
 fun CartItem(
-
     book: Book,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onQuantityChange: (Int) -> Unit
 ) {
-
     var quantity by remember { mutableStateOf(book.quantity ?: 1) }
 
     Card(
@@ -115,13 +120,17 @@ fun CartItem(
                 Text(book.title, fontWeight = FontWeight.Bold)
                 Text("${book.price.toInt()} VNĐ", color = Color(0xFF0077B6))
 
-                // Phần chỉnh số lượng - Giữ nguyên phong cách của bạn
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
                     IconButton(
-                        onClick = { if (quantity > 1) quantity-- },
+                        onClick = {
+                            if (quantity > 1) {
+                                quantity--
+                                onQuantityChange(quantity)
+                            }
+                        },
                         modifier = Modifier.size(24.dp)
                     ) {
                         Text("-", fontSize = 18.sp)
@@ -130,7 +139,10 @@ fun CartItem(
                     Text("$quantity", modifier = Modifier.padding(horizontal = 8.dp))
 
                     IconButton(
-                        onClick = { quantity++ },
+                        onClick = {
+                            quantity++
+                            onQuantityChange(quantity)
+                        },
                         modifier = Modifier.size(24.dp)
                     ) {
                         Text("+", fontSize = 18.sp)
@@ -142,7 +154,7 @@ fun CartItem(
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = "Xóa",
-                            tint = Color(0xFFD00000) // Màu đỏ như thiết kế của bạn
+                            tint = Color(0xFFD00000)
                         )
                     }
                 }
@@ -150,6 +162,7 @@ fun CartItem(
         }
     }
 }
+
 
 // Giữ nguyên nguyên bản các composable bạn đã thiết kế
 @Composable
