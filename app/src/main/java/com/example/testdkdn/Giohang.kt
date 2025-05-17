@@ -22,22 +22,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 @Composable
 fun GioHangScreen() {
     val context = LocalContext.current
     var cartItems by remember { mutableStateOf(CartManager.getCart(context)) }
+    var firestoreBooks by remember { mutableStateOf<List<Book>>(emptyList()) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFE3F2FD)) // Giữ nguyên màu nền như thiết kế gốc
-    ) {
-        // Danh sách sản phẩm
-        LazyColumn(
-            modifier = Modifier.weight(1f)
-        ) {
-            items(cartItems) { item ->
+    // Load sách từ Firestore
+    LaunchedEffect(true) {
+        Firebase.firestore.collection("books")
+            .get()
+            .addOnSuccessListener { result ->
+                val books = result.mapNotNull { it.toObject(Book::class.java).copy(id = it.id) }
+                firestoreBooks = books
+            }
+    }
+
+    // Cập nhật giá từng sản phẩm trong giỏ hàng
+    val updatedCartItems = cartItems.map { cartBook ->
+        val matchedBook = firestoreBooks.find { it.title == cartBook.title }
+        if (matchedBook != null) {
+            cartBook.copy(price = matchedBook.price)
+        } else cartBook
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(updatedCartItems) { item ->
                 CartItem(
                     book = item,
                     onRemove = {
@@ -48,24 +62,21 @@ fun GioHangScreen() {
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // PHẦN BẠN THIẾT KẾ - GIỮ NGUYÊN
             item {
-                Spacer(modifier = Modifier.height(12.dp))
-                CheckoutOptionsSection() // Giữ nguyên phần chọn phương thức thanh toán
+                CheckoutOptionsSection()
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
 
-        // Thanh toán - Giữ nguyên style của bạn
         CheckoutSummary(
-            totalPrice = cartItems.sumOf { it.price * (it.quantity ?: 1) }.toInt(),
+            totalPrice = updatedCartItems.sumOf { it.price * (it.quantity ?: 1) }.toInt(),
             onOrderClick = {
                 Toast.makeText(context, "Đặt hàng thành công", Toast.LENGTH_SHORT).show()
             }
         )
-
     }
 }
+
 
 // CartItem được điều chỉnh để phù hợp với Book class
 @Composable
@@ -74,9 +85,6 @@ fun CartItem(
     book: Book,
     onRemove: () -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        println("Giá sách: ${book.title} - ${book.price}")
-    }
 
     var quantity by remember { mutableStateOf(book.quantity ?: 1) }
 

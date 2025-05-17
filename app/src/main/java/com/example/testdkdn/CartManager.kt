@@ -58,4 +58,13 @@ object CartManager {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         prefs.edit().putString(CART_KEY, Gson().toJson(items)).apply()
     }
+    fun updateCartItem(context: Context, updatedBook: Book) {
+        val cart = getCart(context).toMutableList()
+        val index = cart.indexOfFirst { it.title == updatedBook.title }
+        if (index != -1) {
+            cart[index] = updatedBook
+            saveCart(context, cart)
+        }
+    }
+
 }

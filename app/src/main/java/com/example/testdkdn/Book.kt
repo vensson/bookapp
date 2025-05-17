@@ -8,5 +8,5 @@ data class Book(
     var rating: Double = 0.0,
     var image_url: String = "",
     var price: Double = 0.0,
-    var quantity: Int? = 1
+    var quantity: Int = 1
 )
