@@ -159,7 +159,12 @@ fun OrderConfirmationScreen(orderId: String) {
 
                 // Tổng thanh toán
                 item {
-                    val total = data["total"]?.toString()?.toDoubleOrNull() ?: 0.0
+//                    val total = data["total"]?.toString()?.toDoubleOrNull() ?: 0.0
+                    val total = items.sumOf { item ->
+                        (item["price"] as? Number)?.toDouble()?.times(
+                            (item["quantity"] as? Number)?.toLong() ?: 1L
+                        ) ?: 0.0
+                    }
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -226,14 +231,7 @@ fun OrderItemCard(item: Map<String, Any>, numberFormat: NumberFormat) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = item["imageUrl"]?.toString(),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                contentScale = ContentScale.Crop
-            )
+
 
             Spacer(modifier = Modifier.width(12.dp))
 

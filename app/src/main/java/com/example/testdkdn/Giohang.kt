@@ -260,10 +260,7 @@ fun CheckoutOptionsSection() {
             val intent = Intent(context, PhuongThucTT::class.java)
             context.startActivity(intent)
         }
-        Divider()
-        CheckoutOption("Địa chỉ giao hàng", "Chưa chọn") {
-            /* Mở màn hình chọn địa chỉ */
-        }
+
         Divider()
         CheckoutOption("Khuyến mãi", "Chưa áp dụng") {
             /* Mở màn hình khuyến mãi */
