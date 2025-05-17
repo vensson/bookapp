@@ -2,6 +2,7 @@ package com.example.testdkdn
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,20 +36,40 @@ fun GioHangScreen() {
     var expanded by remember { mutableStateOf(false) }
     var phone by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+    var isFirestoreLoaded by remember { mutableStateOf(false) }
 
+    // Load dữ liệu sách từ Firestore
     LaunchedEffect(true) {
         Firebase.firestore.collection("books")
             .get()
             .addOnSuccessListener { result ->
                 val books = result.mapNotNull { it.toObject(Book::class.java).copy(id = it.id) }
                 firestoreBooks = books
+                isFirestoreLoaded = true
+                Log.d("FirestoreLoad", "Dữ liệu sách đã tải xong: ${books.size} sách")
+            }
+            .addOnFailureListener {
+                Log.e("FirestoreLoad", "Lỗi khi tải dữ liệu sách", it)
             }
     }
 
-    val updatedCartItems = cartItems.map { cartBook ->
-        val matchedBook = firestoreBooks.find { it.title == cartBook.title }
-        if (matchedBook != null) cartBook.copy(price = matchedBook.price)
-        else cartBook
+    // Cập nhật giỏ hàng với giá từ Firestore khi đã có dữ liệu
+    val updatedCartItems = remember(cartItems, firestoreBooks) {
+        if (isFirestoreLoaded) {
+            cartItems.map { cartBook ->
+                firestoreBooks.find { it.title == cartBook.title }?.let { matchedBook ->
+                    cartBook.copy(price = matchedBook.price).also {
+                        Log.d("CartUpdate", "Cập nhật giá cho ${cartBook.title}: ${matchedBook.price}")
+                    }
+                } ?: cartBook.also {
+                    Log.w("CartUpdate", "Không tìm thấy sách tương ứng cho ${cartBook.title}")
+                }
+            }
+        } else {
+            cartItems.also {
+                Log.d("CartUpdate", "Chưa tải xong dữ liệu Firestore, giữ nguyên giỏ hàng")
+            }
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -96,11 +117,13 @@ fun GioHangScreen() {
                     onRemove = {
                         CartManager.removeFromCart(context, item)
                         cartItems = CartManager.getCart(context)
+                        Log.d("CartAction", "Đã xóa sách: ${item.title}")
                     },
                     onQuantityChange = { newQuantity ->
                         val updatedBook = item.copy(quantity = newQuantity)
                         CartManager.updateCartItem(context, updatedBook)
                         cartItems = CartManager.getCart(context)
+                        Log.d("CartAction", "Cập nhật số lượng ${item.title}: $newQuantity")
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -115,7 +138,12 @@ fun GioHangScreen() {
         CheckoutSummary(
             totalPrice = updatedCartItems.sumOf { it.price * (it.quantity ?: 1) }.toInt(),
             onOrderClick = {
-                val finalCart = CartManager.getCart(context)
+                if (!isFirestoreLoaded) {
+                    Toast.makeText(context, "Đang tải dữ liệu sách, vui lòng chờ...", Toast.LENGTH_SHORT).show()
+                    return@CheckoutSummary
+                }
+
+                val finalCart = updatedCartItems
 
                 if (finalCart.isEmpty()) {
                     Toast.makeText(context, "Giỏ hàng trống!", Toast.LENGTH_SHORT).show()
@@ -127,6 +155,14 @@ fun GioHangScreen() {
                     return@CheckoutSummary
                 }
 
+                // Kiểm tra lại giá trước khi đặt hàng
+                finalCart.forEach { item ->
+                    if (item.price <= 0) {
+                        Toast.makeText(context, "Giá sản phẩm ${item.title} không hợp lệ!", Toast.LENGTH_SHORT).show()
+                        return@CheckoutSummary
+                    }
+                }
+
                 val orderData = mapOf(
                     "userId" to user?.uid,
                     "userEmail" to user?.email,
@@ -136,36 +172,34 @@ fun GioHangScreen() {
                         mapOf(
                             "title" to it.title,
                             "quantity" to (it.quantity ?: 1),
-                            "price" to it.price
+                            "price" to it.price,
+                            "total" to (it.price * (it.quantity ?: 1))
                         )
                     },
+                    "totalAmount" to finalCart.sumOf { it.price * (it.quantity ?: 1) },
                     "timestamp" to System.currentTimeMillis()
                 )
-
 
                 Firebase.firestore.collection("orders")
                     .add(orderData)
                     .addOnSuccessListener {
                         Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
                         CartManager.clearCart(context)
+                        Log.d("OrderSuccess", "Đã tạo đơn hàng: ${it.id}")
 
                         val intent = Intent(context, ThongBao::class.java)
-                        intent.putExtra("orderId", it.id) // Gửi ID đơn hàng sang ThongBao
+                        intent.putExtra("orderId", it.id)
                         context.startActivity(intent)
                     }
-
                     .addOnFailureListener {
                         Toast.makeText(context, "Lỗi khi đặt hàng!", Toast.LENGTH_SHORT).show()
+                        Log.e("OrderError", "Lỗi khi tạo đơn hàng", it)
                     }
             }
         )
     }
 }
 
-
-
-
-// CartItem được điều chỉnh để phù hợp với Book class
 @Composable
 fun CartItem(
     book: Book,
@@ -244,8 +278,7 @@ fun CartItem(
     }
 }
 
-
-// Giữ nguyên nguyên bản các composable bạn đã thiết kế
+// Các composable khác giữ nguyên như bản gốc
 @Composable
 fun CheckoutOptionsSection() {
     val context = LocalContext.current
@@ -305,7 +338,7 @@ fun CheckoutSummary(totalPrice: Int, onOrderClick: () -> Unit) {
                 .fillMaxWidth()
                 .padding(top = 8.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF0077B6) // Màu xanh như thiết kế của bạn
+                containerColor = Color(0xFF0077B6)
             )
         ) {
             Text("Đặt đơn hàng", color = Color.White)
