@@ -44,7 +44,6 @@ class MainActivity : ComponentActivity() {
         auth = Firebase.auth
         db = FirebaseFirestore.getInstance()
 
-        // Kiểm tra nếu đã đăng nhập thì chuyển thẳng đến trang chủ
         if (auth.currentUser != null) {
             checkUserRoleAndNavigate()
             return
@@ -69,7 +68,6 @@ class MainActivity : ComponentActivity() {
                     finish()
                 }
                 .addOnFailureListener {
-                    // Nếu không lấy được role, mặc định là user thường
                     navigateToHome(1)
                     finish()
                 }
@@ -106,7 +104,6 @@ fun LoginScreen(
     val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Hình nền từ drawable
         Image(
             painter = painterResource(id = R.drawable.nenlogin),
             contentDescription = "Login Background",
@@ -114,7 +111,6 @@ fun LoginScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Lớp phủ màu
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -137,7 +133,6 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header
             Text(
                 text = "ĐĂNG NHẬP",
                 style = MaterialTheme.typography.headlineLarge.copy(
@@ -147,7 +142,6 @@ fun LoginScreen(
                 modifier = Modifier.padding(bottom = 40.dp)
             )
 
-            // Form đăng nhập
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -159,21 +153,14 @@ fun LoginScreen(
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Email Field
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
                         label = { Text("Email") },
                         leadingIcon = {
-                            Icon(
-                                Icons.Default.Email,
-                                contentDescription = "Email Icon",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            Icon(Icons.Default.Email, contentDescription = null)
                         },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email
-                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp)
@@ -181,22 +168,15 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Password Field
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
                         label = { Text("Mật khẩu") },
                         leadingIcon = {
-                            Icon(
-                                Icons.Default.Lock,
-                                contentDescription = "Password Icon",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            Icon(Icons.Default.Lock, contentDescription = null)
                         },
                         visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password
-                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp)
@@ -204,21 +184,15 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Forgot Password Link
                     TextButton(
                         onClick = { showForgotPasswordDialog = true },
                         modifier = Modifier.align(Alignment.End)
                     ) {
-                        Text(
-                            "Quên mật khẩu?",
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 14.sp
-                        )
+                        Text("Quên mật khẩu?", fontSize = 14.sp)
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Login Button
                     Button(
                         onClick = {
                             coroutineScope.launch {
@@ -248,36 +222,21 @@ fun LoginScreen(
                         enabled = !isLoading
                     ) {
                         if (isLoading) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                         } else {
-                            Text(
-                                "ĐĂNG NHẬP",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text("ĐĂNG NHẬP", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Register Link
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 8.dp)
                     ) {
-                        Text(
-                            "Chưa có tài khoản?",
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Text("Chưa có tài khoản?")
                         TextButton(onClick = onRegisterClick) {
-                            Text(
-                                "Đăng ký ngay",
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text("Đăng ký ngay", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -286,7 +245,6 @@ fun LoginScreen(
     }
 
     // Dialog quên mật khẩu
-    // Thay thế toàn bộ Dialog quên mật khẩu bằng code này
     if (showForgotPasswordDialog) {
         var resetEmail by remember { mutableStateOf("") }
         var isCheckingEmail by remember { mutableStateOf(false) }
@@ -301,7 +259,7 @@ fun LoginScreen(
                         value = resetEmail,
                         onValueChange = {
                             resetEmail = it
-                            errorMessage = null // Xóa thông báo lỗi khi người dùng nhập
+                            errorMessage = null
                         },
                         label = { Text("Nhập email của bạn") },
                         modifier = Modifier.fillMaxWidth(),
@@ -313,72 +271,52 @@ fun LoginScreen(
                             }
                         }
                     )
-
-                    if (isCheckingEmail) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .align(Alignment.CenterHorizontally)
-                        )
-                    }
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         if (resetEmail.isBlank()) {
-                            errorMessage = "Vui lòng nhập email"
+                            errorMessage = "Email không được để trống"
                             return@TextButton
                         }
 
-                        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(resetEmail).matches()) {
-                            errorMessage = "Email không hợp lệ"
-                            return@TextButton
-                        }
-
-                        isCheckingEmail = true
-                        errorMessage = null
-
-                        auth.fetchSignInMethodsForEmail(resetEmail)
-                            .addOnCompleteListener { task ->
-                                isCheckingEmail = false
-                                if (task.isSuccessful) {
-                                    val methods = task.result?.signInMethods
-                                    if (methods.isNullOrEmpty()) {
-                                        errorMessage = "Email chưa được đăng ký"
-                                    } else {
-                                        auth.sendPasswordResetEmail(resetEmail)
-                                            .addOnCompleteListener { resetTask ->
-                                                if (resetTask.isSuccessful) {
-                                                    Toast.makeText(
-                                                        context,
-                                                        "Email đặt lại mật khẩu đã được gửi đến $resetEmail",
-                                                        Toast.LENGTH_LONG
-                                                    ).show()
-                                                    showForgotPasswordDialog = false
-                                                } else {
-                                                    errorMessage = "Lỗi gửi email: ${resetTask.exception?.message}"
-                                                }
-                                            }
+                        coroutineScope.launch {
+                            isCheckingEmail = true
+                            try {
+                                Firebase.auth.sendPasswordResetEmail(resetEmail.trim())
+                                    .addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            Toast.makeText(
+                                                context,
+                                                "Email đặt lại mật khẩu đã được gửi",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                            showForgotPasswordDialog = false
+                                        } else {
+                                            errorMessage = "Không gửi được email: ${task.exception?.message}"
+                                        }
                                     }
-                                } else {
-                                    errorMessage = "Lỗi kiểm tra email: ${task.exception?.message}"
-                                }
+                            } finally {
+                                isCheckingEmail = false
                             }
+                        }
                     },
                     enabled = !isCheckingEmail
                 ) {
-                    Text("Gửi yêu cầu")
+                    if (isCheckingEmail) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    } else {
+                        Text("Gửi")
+                    }
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showForgotPasswordDialog = false },
-                    enabled = !isCheckingEmail
-                ) {
+                TextButton(onClick = { showForgotPasswordDialog = false }) {
                     Text("Hủy")
                 }
             }
         )
     }
 }
+//
