@@ -130,7 +130,7 @@ fun GioHangScreen() {
             }
 
             item {
-                CheckoutOptionsSection()
+
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -279,24 +279,7 @@ fun CartItem(
 }
 
 // Các composable khác giữ nguyên như bản gốc
-@Composable
-fun CheckoutOptionsSection() {
-    val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .padding(12.dp)
-    ) {
-        CheckoutOption("Phương thức thanh toán", "Chưa chọn") {
-            val intent = Intent(context, PhuongThucTT::class.java)
-            context.startActivity(intent)
-        }
-
-
-    }
-}
 
 @Composable
 fun CheckoutOption(title: String, value: String, onClick: () -> Unit) {

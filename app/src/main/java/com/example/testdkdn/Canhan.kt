@@ -65,10 +65,45 @@ import coil.compose.rememberAsyncImagePainter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CaNhan() {
-    val currentUser = FirebaseAuth.getInstance().currentUser
-    val email = currentUser?.email ?: "Chưa đăng nhập"
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
+    val currentUser = auth.currentUser
+    val db = FirebaseFirestore.getInstance()
+
+    // State để lưu thông tin người dùng
+    var userName by remember { mutableStateOf("") }
+    var userEmail by remember { mutableStateOf("") }
+    var userRole by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // Lấy thông tin người dùng từ Firestore
+    LaunchedEffect(Unit) {
+        currentUser?.email?.let { email ->
+            db.collection("users").document(email)
+                .get()
+                .addOnSuccessListener { document ->
+                    if (document.exists()) {
+                        userName = document.getString("name") ?: "Khách"
+                        userEmail = document.getString("email") ?: currentUser.email ?: "Chưa đăng nhập"
+                        val role = document.getLong("role")?.toInt() ?: 1
+                        userRole = if (role == 2) "Quản trị viên" else "Người dùng"
+                    } else {
+                        userName = currentUser.displayName ?: "Khách"
+                        userEmail = currentUser.email ?: "Chưa đăng nhập"
+                        userRole = "Người dùng"
+                    }
+                    isLoading = false
+                }
+                .addOnFailureListener {
+                    userName = currentUser?.displayName ?: "Khách"
+                    userEmail = currentUser?.email ?: "Chưa đăng nhập"
+                    userRole = "Người dùng"
+                    isLoading = false
+                }
+        } ?: run {
+            isLoading = false
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -79,7 +114,9 @@ fun CaNhan() {
                 actions = {
                     IconButton(onClick = {
                         auth.signOut()
-                        val intent = Intent(context, MainActivity::class.java)
+                        val intent = Intent(context, MainActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
                         context.startActivity(intent)
                     }) {
                         Icon(
@@ -103,23 +140,124 @@ fun CaNhan() {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AvatarWithEditIcon()
-            Spacer(modifier = Modifier.height(12.dp))
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+            } else {
+                AvatarWithEditIcon(userName)
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = email,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Black
-            )
+                // Hiển thị tên người dùng
+                Text(
+                    text = userName,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
 
-            Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Button(onClick = {
-                val intent = Intent(context, ThongBao::class.java)
-                context.startActivity(intent)
-            }) {
-                Text("Xem đơn hàng")
+                // Hiển thị email
+                Text(
+                    text = userEmail,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Gray
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Hiển thị vai trò
+                Text(
+                    text = "Vai trò: $userRole",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF0077B6)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Các nút chức năng
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Button(
+                        onClick = {
+                            val intent = Intent(context, ThongBao::class.java)
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Xem đơn hàng")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+
+                }
             }
+        }
+    }
+}
+
+@Composable
+fun AvatarWithEditIcon(userName: String) {
+    val initials = remember(userName) {
+        if (userName.isNotBlank()) {
+            userName.split(" ")
+                .take(2)
+                .joinToString("") { it.firstOrNull()?.toString() ?: "" }
+                .uppercase()
+        } else {
+            "?"
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .size(150.dp),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        // Hiển thị avatar với chữ cái đầu nếu không có ảnh
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .background(Color(0xFF0077B6))
+                .border(3.dp, Color.White, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = initials,
+                style = MaterialTheme.typography.headlineLarge,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        // Nút thay đổi ảnh đại diện
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(Color.White)
+                .border(1.dp, Color.LightGray, CircleShape)
+                .clickable {
+                    // TODO: Thêm chức năng chọn ảnh từ thư viện
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = "Thay ảnh đại diện",
+                tint = Color.Gray,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
