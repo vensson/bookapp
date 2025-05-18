@@ -257,19 +257,24 @@ class TrangchuActivity : ComponentActivity() {
                 .background(Color(0xFFE3F2FD)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            TextField(
+            OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(16.dp)),
                 placeholder = { Text("Tìm kiếm theo tên hoặc tác giả") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Tìm kiếm") },
                 singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                )
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color(0xFF0077B6),
+                    unfocusedBorderColor = Color.LightGray,
+                    containerColor = Color.White
+                ),
+                shape = RoundedCornerShape(16.dp)
             )
+
 
             // Phần dropdown để chọn category
             Box(
@@ -281,27 +286,30 @@ class TrangchuActivity : ComponentActivity() {
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded }
                 ) {
-                    TextField(
+                    OutlinedTextField(
                         value = selectedCategory,
                         onValueChange = {},
                         readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(),
                         label = { Text("Chọn thể loại") },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            disabledContainerColor = Color.White,
-                        )
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp)),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = Color(0xFF0077B6),
+                            unfocusedBorderColor = Color.LightGray,
+                            containerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(16.dp)
                     )
 
                     ExposedDropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
                     ) {
-                        // Option "Tất cả"
                         DropdownMenuItem(
                             text = { Text("Tất cả") },
                             onClick = {
@@ -309,8 +317,6 @@ class TrangchuActivity : ComponentActivity() {
                                 expanded = false
                             }
                         )
-
-                        // Các category từ Firebase
                         categories.forEach { category ->
                             DropdownMenuItem(
                                 text = { Text(category) },
@@ -323,6 +329,7 @@ class TrangchuActivity : ComponentActivity() {
                     }
                 }
             }
+
 
             Text(
                 text = "Sách nổi bật",
@@ -349,20 +356,7 @@ class TrangchuActivity : ComponentActivity() {
             }
 
             // Nút thêm sản phẩm (chỉ hiện với role == 2)
-            if (role == 2) {
-                Button(
-                    onClick = {
-                        val intent = Intent(context, ThemSachActivity::class.java)
-                        context.startActivity(intent)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth(0.9f)
-                ) {
-                    Text("Thêm sản phẩm", color = Color.White)
-                }
-            }
+
         }
     }
 
@@ -486,10 +480,5 @@ class TrangchuActivity : ComponentActivity() {
             }
         }
     }
-
-
-
-
-
 
 }
