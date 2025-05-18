@@ -62,36 +62,64 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CaNhan() {
     val currentUser = FirebaseAuth.getInstance().currentUser
     val email = currentUser?.email ?: "Chưa đăng nhập"
-
     val context = LocalContext.current
+    val auth = FirebaseAuth.getInstance()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFE3F2FD))
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        AvatarWithEditIcon()
-        Spacer(modifier = Modifier.height(12.dp))
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text("Thông tin cá nhân")
+                },
+                actions = {
+                    IconButton(onClick = {
+                        auth.signOut()
+                        val intent = Intent(context, MainActivity::class.java)
+                        context.startActivity(intent)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Logout,
+                            contentDescription = "Đăng xuất",
+                            tint = Color.Red
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color(0xFFBBDEFB)
+                )
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+                .background(Color(0xFFE3F2FD))
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AvatarWithEditIcon()
+            Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            text = email,
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.Black
-        )
+            Text(
+                text = email,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Black
+            )
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-        Button(onClick = {
-            val intent = Intent(context, ThongBao::class.java)
-            context.startActivity(intent)
-        }) {
-            Text("Xem đơn hàng")
+            Button(onClick = {
+                val intent = Intent(context, ThongBao::class.java)
+                context.startActivity(intent)
+            }) {
+                Text("Xem đơn hàng")
+            }
         }
     }
 }

@@ -294,10 +294,7 @@ fun CheckoutOptionsSection() {
             context.startActivity(intent)
         }
 
-        Divider()
-        CheckoutOption("Khuyến mãi", "Chưa áp dụng") {
-            /* Mở màn hình khuyến mãi */
-        }
+
     }
 }
 
