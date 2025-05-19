@@ -95,22 +95,20 @@ fun ChitietScreen(
     // Load comments from Firestore on first load
     DisposableEffect(title) {
         val listener = db.collection("comments")
-            .whereEqualTo("bookTitle", title)
             .orderBy("timestamp")
             .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    return@addSnapshotListener
-                }
+                if (error != null) return@addSnapshotListener
 
                 snapshot?.let {
                     val updatedComments = it.documents.mapNotNull { doc ->
                         doc.toObject(Comment::class.java)
-                    }
+                    }.filter { it.bookTitle.trim().equals(title.trim(), ignoreCase = true) }
 
                     commentList.clear()
                     commentList.addAll(updatedComments)
                 }
             }
+
 
         onDispose {
             listener.remove() // Hủy listener khi composable biến mất
