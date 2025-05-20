@@ -428,7 +428,7 @@ class TrangchuActivity : ComponentActivity() {
                 Text(text = "Giá: $formattedPrice")
                 Text("Tác giả: ${book.author}", fontSize = 12.sp, color = Color.Gray)
                 Text("Thể loại: ${book.category}", fontSize = 12.sp)
-                Text("Rating: ${book.rating}", fontSize = 12.sp)
+//                Text("Rating: ${book.rating}", fontSize = 12.sp)
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Button(
