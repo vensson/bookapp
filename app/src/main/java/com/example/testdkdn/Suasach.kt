@@ -110,8 +110,8 @@ fun SuaSachScreen(
         OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Thể loại") })
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedTextField(value = rating, onValueChange = { rating = it }, label = { Text("Đánh giá") })
-        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(value = rating, onValueChange = { rating = it }, label = { Text("Đánh giá") })
+//        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = description,

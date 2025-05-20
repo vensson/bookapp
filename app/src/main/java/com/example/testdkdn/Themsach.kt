@@ -99,11 +99,11 @@ class ThemSachActivity : ComponentActivity() {
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(value = category, onValueChange = { category = it }, label = { Text("Thể loại") })
                 Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = rating.toString(),
-                    onValueChange = { rating = it.toDoubleOrNull() ?: 0.0 },
-                    label = { Text("Đánh giá") }
-                )
+//                TextField(
+//                    value = rating.toString(),
+//                    onValueChange = { rating = it.toDoubleOrNull() ?: 0.0 },
+//                    label = { Text("Đánh giá") }
+//                )
 
 
                 Spacer(modifier = Modifier.height(16.dp))
