@@ -355,7 +355,7 @@ class TrangchuActivity : ComponentActivity() {
                 }
             }
 
-            // Nút thêm sản phẩm (chỉ hiện với role == 2)
+
 
         }
     }

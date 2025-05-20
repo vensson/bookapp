@@ -210,7 +210,7 @@ fun AvatarWithEditIcon(userName: String) {
     val initials = remember(userName) {
         if (userName.isNotBlank()) {
             userName.split(" ")
-                .take(2)
+                .take(2)      // nên để 2 thôi hỉ
                 .joinToString("") { it.firstOrNull()?.toString() ?: "" }
                 .uppercase()
         } else {

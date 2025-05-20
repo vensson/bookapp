@@ -77,11 +77,34 @@ fun SuaSachScreen(
     onUpdateFail: () -> Unit
 ) {
     val context = LocalContext.current
+    val db = FirebaseFirestore.getInstance()
+
+    // Các biến trạng thái các trường bình thường
     var title by remember { mutableStateOf(initTitle) }
     var author by remember { mutableStateOf(initAuthor) }
     var description by remember { mutableStateOf(initDescription) }
     var category by remember { mutableStateOf(initCategory) }
-    var rating by remember { mutableStateOf(initRating) }  // Đây là giá trị rating dạng String từ Firestore
+    var rating by remember { mutableStateOf(initRating) }
+
+    // Biến trạng thái riêng cho price, khởi tạo tạm 0.0
+    var price by remember { mutableStateOf(0.0) }
+    var isPriceLoading by remember { mutableStateOf(true) }
+
+    // Lấy giá price từ Firestore theo documentId khi compose bắt đầu
+    LaunchedEffect(documentId) {
+        isPriceLoading = true
+        db.collection("books").document(documentId).get()
+            .addOnSuccessListener { doc ->
+                if (doc != null && doc.exists()) {
+                    price = doc.getDouble("price") ?: 0.0
+                }
+                isPriceLoading = false
+            }
+            .addOnFailureListener {
+                isPriceLoading = false
+                Toast.makeText(context, "Lỗi tải giá!", Toast.LENGTH_SHORT).show()
+            }
+    }
 
     Column(
         modifier = Modifier
@@ -110,8 +133,19 @@ fun SuaSachScreen(
         OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Thể loại") })
         Spacer(modifier = Modifier.height(8.dp))
 
-//        OutlinedTextField(value = rating, onValueChange = { rating = it }, label = { Text("Đánh giá") })
-//        Spacer(modifier = Modifier.height(8.dp))
+        if (isPriceLoading) {
+            // Nếu đang tải giá thì hiển thị loading nhỏ
+            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+        } else {
+            OutlinedTextField(
+                value = price.toString(),
+                onValueChange = { newVal -> price = newVal.toDoubleOrNull() ?: price },
+                label = { Text("Giá") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = description,
@@ -125,11 +159,10 @@ fun SuaSachScreen(
 
         Button(
             onClick = {
-                // Chuyển đổi rating từ String sang Double
                 val ratingValue = try {
-                    rating.toDouble()  // Cố gắng chuyển đổi sang Double
+                    rating.toDouble()
                 } catch (e: NumberFormatException) {
-                    0.0  // Nếu không thể chuyển đổi, gán giá trị mặc định là 0.0
+                    0.0
                 }
 
                 val updatedBook = hashMapOf(
@@ -137,14 +170,14 @@ fun SuaSachScreen(
                     "author" to author,
                     "description" to description,
                     "category" to category,
-                    "rating" to ratingValue,  // Sử dụng rating đã chuyển đổi thành Double
-                    "image_url" to imageUrl
+                    "rating" to ratingValue,
+                    "image_url" to imageUrl,
+                    "price" to price
                 )
 
-                FirebaseFirestore.getInstance()
-                    .collection("books")
+                db.collection("books")
                     .document(documentId)
-                    .set(updatedBook, SetOptions.merge())  // Gộp thông tin, không xóa cũ
+                    .set(updatedBook, SetOptions.merge())
                     .addOnSuccessListener { onUpdateSuccess() }
                     .addOnFailureListener { onUpdateFail() }
             },
@@ -158,5 +191,7 @@ fun SuaSachScreen(
         }
     }
 }
+
+
 
 
